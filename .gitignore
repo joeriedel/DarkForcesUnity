@@ -1,6 +1,7 @@
 Library/*
 Temp/*
 Obj/*
+dark/*
 *.csproj
 *.pidb
 *.sln
