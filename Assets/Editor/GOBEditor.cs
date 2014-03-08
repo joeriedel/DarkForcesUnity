@@ -25,24 +25,45 @@
 
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 using System.Collections;
 
 namespace EditorTools {
 	
 public class GOBEditorWindow : EditorWindow {
 	
-	[MenuItem("DarkForces/Open GOB...")]
+	[MenuItem("DarkForces/Extract GOB...")]
 	static void Open() {
-		string path = EditorUtility.OpenFilePanel("Choose GOB File", "", "gob");
-		if (path.Length > 0) {
-			if (!Open(path)) {
-				EditorUtility.DisplayDialog("Error", "Unable to open GOB.", "OK");
+		string gobPath = EditorUtility.OpenFilePanel("Choose GOB File", "", "gob");
+		if (gobPath.Length > 0) {
+			string folderPath = EditorUtility.OpenFolderPanel("Choose Destination Folder", "", "");
+			if (folderPath.Length > 0) {
+				if (!ExtractGOB(gobPath, folderPath)) {
+					EditorUtility.DisplayDialog("Error", "Unable to extract GOB.", "OK");
+				}
 			}
 		}
 	}
 
-	static bool Open(string path) {
-		return false;
+	static bool ExtractGOB(string gobPath, string folderPath) {
+		using (GOBFile gob = GOBFile.Open(gobPath)) {
+			if (gob == null)
+				return false;
+
+			foreach (GOBFile.File file in gob.Files) {
+				try {
+					using (FileStream sysFile = File.Create(folderPath + "/" + file.Name)) {
+						byte[] data = file.Load();
+						sysFile.Write(data, 0, data.Length);
+					}
+				} catch (System.Exception e) {
+					Debug.Log("Error extracting GOB '" + gobPath + "', file '" + file.Name + "'");
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }
 

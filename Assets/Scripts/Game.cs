@@ -29,15 +29,27 @@ using System.Collections;
 /*! Main game class. */
 public class Game : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
+	void Awake() {
+		Asset.StaticInit(this);
+
 		_files = new Files();
 		_files.Initialize();
 	}
+
+	void Start() {
+		//SoundAsset sound = Asset.Load("DOOR2-1.VOC", Asset.CacheMode.Globals, null) as SoundAsset;
+		SoundAsset sound = Asset.Load("WELD-2.VOC", Asset.CacheMode.Globals, null) as SoundAsset;
+		if (sound != null) {
+			SoundInstance soundInstance = sound.CreateInstance();
+			//AudioSource.PlayClipAtPoint(sound.AudioClip, Vector3.zero);
+			AudioSource source = GetComponent<AudioSource>();
+			soundInstance.AttachToAudioSource(source);
+			source.Play();
+		}
+
+	}
 	
-	// Update is called once per frame
-	void Update () {
-	
+	void Update() {
 	}
 
 	public Files Files { get { return _files; } }

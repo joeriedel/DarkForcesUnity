@@ -69,6 +69,7 @@ public sealed class GOBFile : System.IDisposable {
 			for (int i = 0; i < numFiles; ++i) {
 				File file = File.Read(br, name);
 				gob._dir.Add(file.Name, file);
+				Debug.Log (file.Name);
 			}
 
 			gob._file = br;
@@ -95,6 +96,8 @@ public sealed class GOBFile : System.IDisposable {
 		_dir = null;
 	}
 
+	public Dictionary<string, File>.ValueCollection Files { get { return _dir.Values; } }
+
 	public class File {
 
 		private File(BinaryReader br, int ofs, int len, string name) {
@@ -108,12 +111,13 @@ public sealed class GOBFile : System.IDisposable {
 			int ofs = br.ReadInt32();
 			int len = br.ReadInt32();
 			br.Read(nameBuf, 0, 13);
-			string name = System.Text.Encoding.ASCII.GetString(nameBuf);
+			string name = System.Text.Encoding.ASCII.GetString(nameBuf).TrimEnd('\0');
 			return new File(br, ofs, len, name);
 		}
 
 		public byte[] Load() {
 			byte[] data = new byte[_len];
+			_br.BaseStream.Position = Ofs;
 			_br.Read(data, 0, _len);
 			return data;
 		}

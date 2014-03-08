@@ -27,7 +27,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public abstract class Asset {
+public abstract class Asset : System.IDisposable {
 
 	public enum Type {
 		BLOB,
@@ -42,21 +42,22 @@ public abstract class Asset {
 	public Asset(string name, Type type) {
 		_name = name;
 		_type = type;
-		_refCount = 1;
 	}
 
-	public int Reference() {
-		return ++_refCount;
+	public void Dispose() {
+		Dispose(true);
+		System.GC.SuppressFinalize(this);
 	}
 
-	public int Release() {
-		if (--_refCount == 0) {
-			Dispose();
+	public virtual void Dispose(bool disposing) {
+		if (disposing) {
+			if (_cached) {
+				_cached = false;
+				Remove(this);
+			}
 		}
-		return _refCount;
 	}
 
-	public int Count { get { return _refCount; } }
 	public string Name { get { return _name; } }
 	public Type TypeOf { get { return _type; } } 
 	public bool Cached { get { return _cached; } }
@@ -79,13 +80,13 @@ public abstract class Asset {
 		return Type.BLOB;
 	}
 	
-	public static Asset Load(string name, CacheMode mode) {
+	public static Asset Load(string name, CacheMode mode, object createArgs) {
 		Asset asset = null;
 		if (s_assets.TryGetValue(name, out asset))
 			return asset;
 		byte[] data = s_game.Files.Load(name);
 		if (data != null) {
-			asset = New(name, data, TypeForName(name));
+			asset = New(name, data, TypeForName(name), createArgs);
 		}
 
 		if (asset != null) {
@@ -95,30 +96,45 @@ public abstract class Asset {
 		return asset;
 	}
 
-	public static Asset Load(GOBFile.File file) {
+	public static Asset Load(GOBFile.File file, object createArgs) {
 		byte[] data = file.Load();
 
 		if (data != null) {
-			return New(file.Name, data, TypeForName(file.Name));
+			return New(file.Name, data, TypeForName(file.Name), createArgs);
 		}
 
 		return null;
 	}
 
-	public static Asset New(string name, byte[] data, Type type) {
+	public static Asset New(string name, byte[] data, Type type, object createArgs) {
 		Asset asset = null;
-		switch (type) {
-		default:
-			asset = new BLOB(name, data);
-			break;
-			
+		try {
+			switch (type) {
+				case Type.VOC:
+					asset = new VOC(name, data, createArgs);
+					break;
+				default:
+					asset = new BLOB(name, data);
+					break;
+			}
+		} catch (System.Exception e) {
+			Debug.Log("ERROR LOADING '" + name + "': '" + e.Message + "' @ " + e.StackTrace);
+			asset = null;
 		}
 		return asset;
 	}
 
-	private void Dispose() {
-		if (_cached)
-			Remove(this);
+	public static void ResetCache() {
+		Dictionary<string, Asset> assets = s_assets;
+		s_assets = null;
+
+		if (assets != null) {
+			foreach (Asset asset in assets.Values) {
+				asset.Dispose();
+			}
+		}
+
+		s_assets = new Dictionary<string, Asset>();
 	}
 
 	private static void Add(Asset asset) {
@@ -126,7 +142,9 @@ public abstract class Asset {
 	}
 
 	private static void Remove(Asset asset) {
-		s_assets.Remove(asset.Name);
+		if (s_assets != null) {
+			s_assets.Remove(asset.Name);
+		}
 	}
 
 	private Type _type;

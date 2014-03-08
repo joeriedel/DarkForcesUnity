@@ -5,6 +5,8 @@ dark/*
 *.csproj
 *.pidb
 *.sln
+*.suo
+*.unityproj
 *.userprefs
 .DS_Store
 .user

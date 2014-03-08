@@ -1,4 +1,4 @@
-﻿/* VOC.cs
+﻿/* InvalidDataException.cs
  *
  * The MIT License (MIT)
  *
@@ -23,10 +23,12 @@
  * THE SOFTWARE.
 */
 
-using UnityEngine;
-using System.Collections;
+public class InvalidDataException : System.Exception {
 
-/*public class VOC : Asset {
+	public InvalidDataException() {
+	}
 
-
-}*/
+	public InvalidDataException(string message)
+		: base(message) {
+	}
+}

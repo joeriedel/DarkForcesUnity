@@ -32,18 +32,18 @@ public sealed class Files {
 	public Files() {
 		_assetPath = Application.dataPath;
 		_basePath = _assetPath + "/..";
-		_darkPath = _basePath + "/dark/";
+		_darkPath = _basePath + "/DARK/";
 		Debug.Log ("Starting files at '" + _basePath + "'...");
 	}
 
 	public bool Initialize() {
-		if (OpenDarkGOB("dark.gob") == null)
+		if (OpenDarkGOB("DARK.GOB") == null)
 			return false;
-		if (OpenDarkGOB("sounds.gob") == null)
+		if (OpenDarkGOB("SOUNDS.GOB") == null)
 			return false;
-		if (OpenDarkGOB("sprites.gob") == null)
+		if (OpenDarkGOB("SPRITES.GOB") == null)
 			return false;
-		if (OpenDarkGOB("textures.gob") == null)
+		if (OpenDarkGOB("TEXTURES.GOB") == null)
 			return false;
 		return true;
 	}
