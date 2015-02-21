@@ -24,7 +24,6 @@
 */
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public interface ISoundAssetInternal {
@@ -69,21 +68,13 @@ public abstract class SoundAsset : Asset {
 				_instances = new List<SoundInstance>();
 			}
 			_instances.Add(instance);
+			_sound.Reference();
 		}
 
 		public void RemoveInstance(SoundInstance instance) {
 			if (_instances != null) {
-				_instances.Remove(instance);
-			}
-		}
-
-		public void DisposeAll() {
-			List<SoundInstance> x = _instances;
-			_instances = null;
-
-			if (x != null) {
-				foreach (SoundInstance z in x) {
-					z.Dispose();
+				if (_instances.Remove(instance)) {
+					_sound.Dispose();
 				}
 			}
 		}
@@ -115,8 +106,8 @@ public abstract class SoundInstance : System.IDisposable {
 		}
 	}
 
-	protected virtual void Dispose(bool disposing) {
-		if (disposing) {
+	protected virtual void Dispose(bool bIsDisposing) {
+		if (bIsDisposing) {
 			_internal.RemoveInstance(this);
 		}
 	}

@@ -56,7 +56,7 @@ public class GOBEditorWindow : EditorWindow {
 						byte[] data = file.Load();
 						sysFile.Write(data, 0, data.Length);
 					}
-				} catch (System.Exception e) {
+				} catch (System.Exception) {
 					Debug.Log("Error extracting GOB '" + gobPath + "', file '" + file.Name + "'");
 					return false;
 				}

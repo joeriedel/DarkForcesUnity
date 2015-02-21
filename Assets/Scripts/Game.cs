@@ -25,9 +25,13 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /*! Main game class. */
 public class Game : MonoBehaviour {
+
+	public Material MyMaterial;
+	public Texture2D MyTexture;
 
 	void Awake() {
 		Asset.StaticInit(this);
@@ -38,17 +42,63 @@ public class Game : MonoBehaviour {
 
 	void Start() {
 		//SoundAsset sound = Asset.Load("DOOR2-1.VOC", Asset.CacheMode.Globals, null) as SoundAsset;
-		SoundAsset sound = Asset.Load("WELD-2.VOC", Asset.CacheMode.Globals, null) as SoundAsset;
-		if (sound != null) {
-			SoundInstance soundInstance = sound.CreateInstance();
-			//AudioSource.PlayClipAtPoint(sound.AudioClip, Vector3.zero);
-			AudioSource source = GetComponent<AudioSource>();
-			soundInstance.AttachToAudioSource(source);
-			source.Play();
+		using (SoundAsset sound = Asset.LoadCached("WELD-2.VOC") as SoundAsset) {
+			if (sound != null) {
+				SoundInstance soundInstance = sound.CreateInstance();
+				//AudioSource.PlayClipAtPoint(sound.AudioClip, Vector3.zero);
+				AudioSource source = GetComponent<AudioSource>();
+				soundInstance.AttachToAudioSource(source);
+				//source.Play();
+			}
 		}
 
+		GameObject rect = new GameObject();
+		CreateQuad(rect.AddComponent<MeshFilter>().mesh, 256, 256);
+
+		Material m = new Material(MyMaterial);
+
+		using (PAL pal = Asset.LoadCached("RAMSHED.PAL") as PAL) {
+			BM.CreateArgs createArgs = new BM.CreateArgs();
+			createArgs.Pal = pal;
+
+			using (BM bitmap = Asset.LoadCached("IERAMSKY.BM", createArgs) as BM) {
+				m.mainTexture = bitmap.Frames[0].Texture;
+			}
+		}
+
+		rect.AddComponent<MeshRenderer>().material = m;
+		
 	}
-	
+
+	static void CreateQuad(Mesh mesh, float W, float H) {
+		Vector3[] verts = new Vector3[4];
+		Vector2[] uvs = new Vector2[4];
+
+		verts[0] = new Vector3(-W/2, H/2, 0);
+		verts[1] = new Vector3(W/2, H/2, 0);
+		verts[2] = new Vector3(W/2, -H/2, 0);
+		verts[3] = new Vector3(-W/2, -H/2, 0);
+
+		uvs[0] = new Vector2(0, 1);
+		uvs[1] = new Vector2(1, 1);
+		uvs[2] = new Vector3(1, 0);
+		uvs[3] = new Vector3(0, 0);
+
+		int[] triangles = new int[6];
+		triangles[0] = 0;
+		triangles[1] = 1;
+		triangles[2] = 3;
+		triangles[3] = 3;
+		triangles[4] = 1;
+		triangles[5] = 2;
+
+		mesh.Clear();
+		mesh.vertices = verts;
+		mesh.uv = uvs;
+		mesh.triangles = triangles;
+
+	}
+
 	void Update() {
 	}
 

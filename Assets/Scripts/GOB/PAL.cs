@@ -1,4 +1,4 @@
-﻿/* InvalidDataException.cs
+﻿/* PAL.cs
  *
  * The MIT License (MIT)
  *
@@ -23,22 +23,36 @@
  * THE SOFTWARE.
 */
 
-public class InvalidDataException : System.Exception {
+using UnityEngine;
 
-	public InvalidDataException() {
+/*! Dark Forces palette file. */
+public sealed class PAL : Asset {
+
+	public PAL(string name, byte[] data, object createArgs) : base(name, Type.PAL) {
+		if (data.Length != 768) {
+			throw new InvalidDataException("Dark forces palette files are 768 bytes long!");
+		}
+
+		_colors = new Color32[256];
+
+		int palOfs = 0;
+		for (int i = 0; i < _colors.Length; ++i, palOfs += 3) {
+			_colors[i] = new Color32(ExpandPalByte(data[palOfs]), ExpandPalByte(data[palOfs+1]), ExpandPalByte(data[palOfs+2]), 255);
+		}
 	}
 
-	public InvalidDataException(string message)
-		: base(message) {
-	}
-}
-
-public class InvalidFormatException : System.Exception {
-
-	public InvalidFormatException() {
+	static PAL() {
+		_transparentColor = new Color32(0, 255, 255, 0);
 	}
 
-	public InvalidFormatException(string message)
-		: base(message) {
+	static byte ExpandPalByte(byte c) {
+		return (byte)(c/63f*255f+0.5f);
 	}
+
+	public static Color32 Transparent { get { return _transparentColor; } }
+
+	public Color32[] Colors { get { return _colors; } }
+
+	private Color32[] _colors;
+	private static Color32 _transparentColor;
 }

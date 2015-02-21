@@ -24,43 +24,61 @@
 */
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public abstract class Asset : System.IDisposable {
 
 	public enum Type {
 		BLOB,
+		BM,
+		LEV,
+		PAL,
 		VOC
 	}
 
 	public enum CacheMode {
-		None,
-		Globals
+		Uncached,
+		Cached
 	}
 
 	public Asset(string name, Type type) {
 		_name = name;
 		_type = type;
+		_refCount = 1;
 	}
 
 	public void Dispose() {
-		Dispose(true);
-		System.GC.SuppressFinalize(this);
-	}
+		RuntimeCheck.Assert(_refCount > 0, "RefCount error!");
 
-	public virtual void Dispose(bool disposing) {
-		if (disposing) {
-			if (_cached) {
-				_cached = false;
-				Remove(this);
+		if (--_refCount == 0) {
+			if (!_bIsCached) {
+				Dispose(true);
+				System.GC.SuppressFinalize(this);
 			}
 		}
 	}
 
+	protected virtual void Dispose(bool bIsDisposing) {
+		if (bIsDisposing) {
+			if (_bIsCached) {
+				_bIsCached = false;
+				Remove(this);
+			} else {
+				OnDispose();
+			}
+		}
+	}
+
+	protected virtual void OnDispose() { }
+
+	public void Reference() {
+		++_refCount;
+	}
+	
 	public string Name { get { return _name; } }
 	public Type TypeOf { get { return _type; } } 
-	public bool Cached { get { return _cached; } }
+	public bool Cached { get { return _bIsCached; } }
+	public int RefCount { get { return _refCount; } }
 
 	public static void StaticInit(Game game) {
 		s_game = game;
@@ -73,24 +91,52 @@ public abstract class Asset : System.IDisposable {
 		int numChars = name.Length - period - 1;
 		
 		string ext = name.Substring(period+1, numChars).ToUpper();
-		
-		if (ext == "VOC")
+
+		if (ext == "BM") {
+			return Type.BM;
+		} else if (ext == "LEV") {
+			return Type.LEV;
+		} else if (ext == "PAL") {
+			return Type.PAL;
+		} else if (ext == "VOC") {
 			return Type.VOC;
-		
+		}
+
 		return Type.BLOB;
 	}
-	
+
+	public static Asset LoadCached(string name) {
+		return Load(name, CacheMode.Cached, null);
+	}
+
+	public static Asset LoadCached(string name, object createArgs) {
+		return Load(name, CacheMode.Cached, createArgs);
+	}
+
+	public static Asset LoadUncached(string name) {
+		return Load(name, CacheMode.Uncached, null);
+	}
+
+	public static Asset LoadUncached(string name, object createArgs) {
+		return Load(name, CacheMode.Uncached, createArgs);
+	}
+
 	public static Asset Load(string name, CacheMode mode, object createArgs) {
 		Asset asset = null;
-		if (s_assets.TryGetValue(name, out asset))
+		if ((mode == CacheMode.Cached) && s_assets.TryGetValue(name, out asset)) {
+			asset.Reference();
 			return asset;
+		}
 		byte[] data = s_game.Files.Load(name);
 		if (data != null) {
 			asset = New(name, data, TypeForName(name), createArgs);
 		}
 
 		if (asset != null) {
-			asset._cached = (mode == CacheMode.None) ? false : true;
+			asset._bIsCached = (mode == CacheMode.Cached);
+			if (asset._bIsCached) {
+				s_assets[name] = asset;
+			}
 		}
 
 		return asset;
@@ -108,8 +154,17 @@ public abstract class Asset : System.IDisposable {
 
 	public static Asset New(string name, byte[] data, Type type, object createArgs) {
 		Asset asset = null;
-		try {
+		//try {
 			switch (type) {
+				case Type.BM:
+					asset = new BM(name, data, createArgs);
+					break;
+				case Type.LEV:
+					asset = new LEV(name, data, createArgs);
+					break;
+				case Type.PAL:
+					asset = new PAL(name, data, createArgs);
+					break;
 				case Type.VOC:
 					asset = new VOC(name, data, createArgs);
 					break;
@@ -117,14 +172,14 @@ public abstract class Asset : System.IDisposable {
 					asset = new BLOB(name, data);
 					break;
 			}
-		} catch (System.Exception e) {
-			Debug.Log("ERROR LOADING '" + name + "': '" + e.Message + "' @ " + e.StackTrace);
-			asset = null;
-		}
+		//} catch (System.Exception e) {
+		//	Debug.LogError("ERROR LOADING '" + name + "': '" + e.Message + "' @ " + e.StackTrace);
+		//	asset = null;
+		//}
 		return asset;
 	}
 
-	public static void ResetCache() {
+	public static void ClearCache() {
 		Dictionary<string, Asset> assets = s_assets;
 		s_assets = null;
 
@@ -135,6 +190,21 @@ public abstract class Asset : System.IDisposable {
 		}
 
 		s_assets = new Dictionary<string, Asset>();
+	}
+
+	public static void PurgeCache() {
+		List<string> purgeList = new List<string>();
+
+		foreach (Asset asset in s_assets.Values) {
+			if (asset._bIsCached && (asset.RefCount == 0)) {
+				purgeList.Add(asset.Name);
+				asset.Dispose(true);
+			}
+		}
+
+		foreach (string name in purgeList) {
+			s_assets.Remove(name);
+		}
 	}
 
 	private static void Add(Asset asset) {
@@ -150,7 +220,7 @@ public abstract class Asset : System.IDisposable {
 	private Type _type;
 	private int _refCount;
 	private string _name;
-	public bool _cached;
+	private bool _bIsCached;
 	private static Game s_game;
 	private static Dictionary<string, Asset> s_assets = new Dictionary<string, Asset>();
 }

@@ -25,7 +25,6 @@
 
 using UnityEngine;
 using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 
 /*! Creative Voice File as used in Dark Forces */
@@ -46,14 +45,12 @@ public sealed class VOC : SoundAsset {
 	public override bool AudioSourceShouldLoop { get { return _audioSourceShouldLoop; } }
 	public override bool IsLooping { get { return _loop; } }
 
-	public override void Dispose(bool disposing) {
-		base.Dispose(disposing);
+	protected override void OnDispose() {
+		base.OnDispose();
 
-		if (disposing) {
-			if (_audioClip != null) {
-				Object.Destroy(_audioClip);
-				_audioClip = null;
-			}
+		if (_audioClip != null) {
+			Object.Destroy(_audioClip);
+			_audioClip = null;
 		}
 	}
 
@@ -310,7 +307,7 @@ public sealed class VOC : SoundAsset {
 		int bytesPerSample = rate.bits / 8;
 		int numSamples = pcm.Length / (bytesPerSample * rate.channels);
 
-		AudioClip clip = AudioClip.Create(Name, numSamples, rate.channels, rate.rate, true, false);
+		AudioClip clip = AudioClip.Create(Name, numSamples, rate.channels, rate.rate, false);
 
 		float[] samples;
 		if (rate.bits == 8) {
@@ -472,10 +469,10 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 		}
 	}
 
-	protected override void Dispose (bool disposing){
-		base.Dispose(disposing);
+	protected override void Dispose(bool bIsDisposing) {
+		base.Dispose(bIsDisposing);
 
-		if (disposing) {
+		if (bIsDisposing) {
 			if (_clip) {
 				Object.Destroy(_clip);
 			}
@@ -487,8 +484,7 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 			Sound.Name, 
 			totalSamples, 
 			_rate.channels, 
-			_rate.rate, 
-			Sound.SoundType == SoundType.Positional, 
+			_rate.rate,
 			true, 
 			OnAudioRead, 
 			OnAudioSetPosition
@@ -506,7 +502,7 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 				int numBlockSamples = block.fpcm.Length / _rate.channels;
 
 				if (block.loop == 65535) {
-					// continuously fill buffer until output is full
+					// continuously fill buffer until output is full or we are triggered
 					while (samplesToRead > 0) {
 						if (_position >= _startOfBlock) {
 							int blockOffset = _position - _startOfBlock;
@@ -516,7 +512,7 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 								samplesToRead -= samplesToCopy;
 								sampleOffset += samplesToCopy;
 								_position += samplesToCopy;
-								
+
 								if (samplesToRead < 1) {
 									// didn't eat buffer?
 									if ((blockOffset+samplesToCopy) < numBlockSamples) {
@@ -525,12 +521,11 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 								}
 							}
 						}
-						
+
 						_startOfBlock += numBlockSamples;
 					}
 
 					return;
-
 				} else {
 					for (;_blockLoop < block.loop; ++_blockLoop) {
 

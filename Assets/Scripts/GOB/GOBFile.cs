@@ -24,7 +24,6 @@
 */
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -34,7 +33,7 @@ public sealed class GOBFile : System.IDisposable {
 	}
 
 	public static GOBFile Open(string path) {
-		Debug.Log("GOBFile.Open(" + path + ")");
+		//Debug.Log("GOBFile.Open(" + path + ")");
 		FileStream fs = null;
 		try { fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read); } catch {}
 		if (fs == null) {
@@ -69,7 +68,7 @@ public sealed class GOBFile : System.IDisposable {
 			for (int i = 0; i < numFiles; ++i) {
 				File file = File.Read(br, name);
 				gob._dir.Add(file.Name, file);
-				Debug.Log (file.Name);
+				// Debug.Log (file.Name);
 			}
 
 			gob._file = br;

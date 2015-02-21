@@ -1,4 +1,4 @@
-﻿/* Game.cs
+﻿/* ByteStream.cs
  *
  * The MIT License (MIT)
  *
@@ -37,11 +37,11 @@ public class ByteStream : IDisposable {
 			throw new ArgumentException("null argument", "baseStream");
 	}
 
-	public void Seek(int numBytes) {
+	public void Skip(int numBytes) {
 		long position = _stream.Position;
 		position += numBytes;
 
-		if ((position < 0) || (position >= _stream.Length)) {
+		if ((position < 0) || (position > _stream.Length)) {
 			throw new InvalidOperationException("Seek outside of stream bounds.");
 		}
 
@@ -61,6 +61,8 @@ public class ByteStream : IDisposable {
 		SeekSet(position);
 	}
 
+	public long Position { get { return _stream.Position; } }
+
 	public int ReadByte() {
 		 int z = _stream.ReadByte();
 		 if (z == -1)
@@ -78,6 +80,30 @@ public class ByteStream : IDisposable {
 
 	public int Read(byte[] buffer, int offset, int count) {
 		return _stream.Read(buffer, offset, count);
+	}
+
+	public char ReadChar() {
+		return Convert.ToChar(ReadByte());
+	}
+
+	public string ReadString(int numChars) {
+		return System.Text.Encoding.ASCII.GetString(Read(numChars));
+	}
+
+	public int ReadLittleShort16() {
+		return ReadLittleInt32(2);
+	}
+
+	public int ReadBigShort16() {
+		return ReadBigInt32(2);
+	}
+
+	public int ReadLittleUShort16() {
+		return (int)ReadLittleUInt32(2);
+	}
+
+	public int ReadBigUShort16() {
+		return (int)ReadBigUInt32(2);
 	}
 
 	public int ReadLittleInt32() {
@@ -288,8 +314,8 @@ public class ByteStream : IDisposable {
 		GC.SuppressFinalize(this);
 	}
 
-	public virtual void Dispose(bool disposing) {
-		if (disposing) {
+	public virtual void Dispose(bool bIsDisposing) {
+		if (bIsDisposing) {
 			_stream.Dispose();
 		}
 	}
