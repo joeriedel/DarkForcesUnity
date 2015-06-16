@@ -62,6 +62,7 @@ public class ByteStream : IDisposable {
 	}
 
 	public long Position { get { return _stream.Position; } }
+	public long Length { get { return _stream.Length; } } 
 
 	public int ReadByte() {
 		 int z = _stream.ReadByte();

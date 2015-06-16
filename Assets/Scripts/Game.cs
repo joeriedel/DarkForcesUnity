@@ -32,6 +32,7 @@ public class Game : MonoBehaviour {
 
 	public Material MyMaterial;
 	public Texture2D MyTexture;
+	private iMUSE _iMuse;
 
 	void Awake() {
 		Asset.StaticInit(this);
@@ -42,7 +43,7 @@ public class Game : MonoBehaviour {
 
 	void Start() {
 		//SoundAsset sound = Asset.Load("DOOR2-1.VOC", Asset.CacheMode.Globals, null) as SoundAsset;
-		using (SoundAsset sound = Asset.LoadCached("WELD-2.VOC") as SoundAsset) {
+		/*using (SoundAsset sound = Asset.LoadCached("WELD-2.VOC") as SoundAsset) {
 			if (sound != null) {
 				SoundInstance soundInstance = sound.CreateInstance();
 				//AudioSource.PlayClipAtPoint(sound.AudioClip, Vector3.zero);
@@ -50,24 +51,31 @@ public class Game : MonoBehaviour {
 				soundInstance.AttachToAudioSource(source);
 				//source.Play();
 			}
-		}
+		}*/
 
 		GameObject rect = new GameObject();
 		CreateQuad(rect.AddComponent<MeshFilter>().mesh, 256, 256);
 
 		Material m = new Material(MyMaterial);
 
-		using (PAL pal = Asset.LoadCached("RAMSHED.PAL") as PAL) {
+		using (PAL pal = Asset.LoadCached<PAL>("RAMSHED.PAL")) {
 			BM.CreateArgs createArgs = new BM.CreateArgs();
 			createArgs.Pal = pal;
 
-			using (BM bitmap = Asset.LoadCached("IERAMSKY.BM", createArgs) as BM) {
+			using (BM bitmap = Asset.LoadCached<BM>("IERAMSKY.BM", createArgs)) {
 				m.mainTexture = bitmap.Frames[0].Texture;
 			}
 		}
 
 		rect.AddComponent<MeshRenderer>().material = m;
-		
+
+		_iMuse = GetComponent<iMUSE>();
+
+		using (GMD stalk = Asset.LoadCached<GMD>("STALK-03.GMD")) {
+			using (GMD fight = Asset.LoadCached<GMD>("FIGHT-03.GMD")) {
+				_iMuse.PlayLevelMusic(stalk, fight);
+			}
+		}
 	}
 
 	static void CreateQuad(Mesh mesh, float W, float H) {

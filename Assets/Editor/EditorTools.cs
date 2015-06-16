@@ -33,7 +33,7 @@ public class Utils {
 	
 	public static void ApplySkin() {
 		if (s_skin == null) {
-			s_skin = Resources.LoadAssetAtPath("Editor/EditorSkin.guiskin", typeof(GUISkin)) as GUISkin;
+			s_skin = AssetDatabase.LoadAssetAtPath("Editor/EditorSkin.guiskin", typeof(GUISkin)) as GUISkin;
 		}
 		GUI.skin = s_skin;
 	}

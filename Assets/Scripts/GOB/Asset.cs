@@ -31,6 +31,7 @@ public abstract class Asset : System.IDisposable {
 	public enum Type {
 		BLOB,
 		BM,
+		GMD,
 		LEV,
 		PAL,
 		VOC
@@ -94,6 +95,8 @@ public abstract class Asset : System.IDisposable {
 
 		if (ext == "BM") {
 			return Type.BM;
+		} else if (ext == "GMD") {
+			return Type.GMD;
 		} else if (ext == "LEV") {
 			return Type.LEV;
 		} else if (ext == "PAL") {
@@ -105,41 +108,49 @@ public abstract class Asset : System.IDisposable {
 		return Type.BLOB;
 	}
 
-	public static Asset LoadCached(string name) {
-		return Load(name, CacheMode.Cached, null);
+	public static T LoadCached<T>(string name) where T : Asset {
+		return Load<T>(name, CacheMode.Cached, null);
 	}
 
-	public static Asset LoadCached(string name, object createArgs) {
-		return Load(name, CacheMode.Cached, createArgs);
+	public static T LoadCached<T>(string name, object createArgs) where T : Asset {
+		return Load<T>(name, CacheMode.Cached, createArgs);
 	}
 
-	public static Asset LoadUncached(string name) {
-		return Load(name, CacheMode.Uncached, null);
+	public static T LoadUncached<T>(string name) where T : Asset {
+		return Load<T>(name, CacheMode.Uncached, null);
 	}
 
-	public static Asset LoadUncached(string name, object createArgs) {
-		return Load(name, CacheMode.Uncached, createArgs);
+	public static T LoadUncached<T>(string name, object createArgs) where T : Asset {
+		return Load<T>(name, CacheMode.Uncached, createArgs);
 	}
 
-	public static Asset Load(string name, CacheMode mode, object createArgs) {
+	public static T Load<T>(string name, CacheMode mode, object createArgs) where T : Asset {
+		
 		Asset asset = null;
 		if ((mode == CacheMode.Cached) && s_assets.TryGetValue(name, out asset)) {
 			asset.Reference();
-			return asset;
-		}
-		byte[] data = s_game.Files.Load(name);
-		if (data != null) {
-			asset = New(name, data, TypeForName(name), createArgs);
-		}
+		} else {
+			byte[] data = s_game.Files.Load(name);
+			if (data != null) {
+				asset = New(name, data, TypeForName(name), createArgs);
+			}
 
-		if (asset != null) {
-			asset._bIsCached = (mode == CacheMode.Cached);
-			if (asset._bIsCached) {
-				s_assets[name] = asset;
+			if (asset != null) {
+				asset._bIsCached = (mode == CacheMode.Cached);
+				if (asset._bIsCached) {
+					s_assets[name] = asset;
+				}
+			} else {
+				throw new System.IO.FileNotFoundException("'" + name + "' was not found in any open GOB file.");
 			}
 		}
 
-		return asset;
+		T t = asset as T;
+		if (t == null) {
+			throw new System.InvalidCastException("'" + name + "' is not a " + typeof(T).FullName);
+		}
+
+		return t;
 	}
 
 	public static Asset Load(GOBFile.File file, object createArgs) {
@@ -158,6 +169,9 @@ public abstract class Asset : System.IDisposable {
 			switch (type) {
 				case Type.BM:
 					asset = new BM(name, data, createArgs);
+					break;
+				case Type.GMD:
+					asset = new GMD(name, data, createArgs);
 					break;
 				case Type.LEV:
 					asset = new LEV(name, data, createArgs);
