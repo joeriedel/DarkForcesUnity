@@ -2,7 +2,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013 Joseph Riedel
+ * Copyright (c) 2015 Joseph Riedel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,11 @@ public sealed class BM : Asset {
 	protected override void OnDispose() {
 		base.OnDispose();
 		foreach (Frame frame in _frames) {
-			Object.Destroy(frame.Texture);
+			if (Application.isPlaying) {
+				Object.Destroy(frame.Texture);
+			} else {
+				Object.DestroyImmediate(frame.Texture);
+			}
 		}
 		_frames = null;
 	}
@@ -93,6 +97,9 @@ public sealed class BM : Asset {
 		if ((header.W == 1) && (header.H != 1)) {
 			// multiple bitmaps in this file.
 			_fps = stream.ReadByte();
+			stream.Skip(1);
+
+			long baseOfs = stream.Position;
 
 			int[] offsets = new int[header.IY];
 			for (int i = 0; i < offsets.Length; ++i) {
@@ -100,7 +107,7 @@ public sealed class BM : Asset {
 			}
 
 			for (int i = 0; i < offsets.Length; ++i) {
-				stream.SeekSet(offsets[i]);
+				stream.SeekSet(offsets[i] + baseOfs);
 				Header subHeader = ReadHeader(stream, EHeaderType.SubHeader);
 				Frame frame = ReadColumns(stream, subHeader, null, createArgs);
 				_frames.Add(frame);
@@ -125,40 +132,44 @@ public sealed class BM : Asset {
 
 	private Frame ReadColumns(ByteStream stream, Header header, int[] columnOffsets, CreateArgs createArgs) {
 
-		Texture2D texture = new Texture2D(header.W, header.H, createArgs.TextureFormat, createArgs.bMipmap, false);
+		try {
+			Texture2D texture = new Texture2D(header.W, header.H, createArgs.TextureFormat, createArgs.bMipmap, false);
 
-		texture.anisoLevel = createArgs.AnisoLevel;
-		texture.filterMode = createArgs.FilterMode;
-		texture.wrapMode = createArgs.WrapMode;
+			texture.anisoLevel = createArgs.AnisoLevel;
+			texture.filterMode = createArgs.FilterMode;
+			texture.wrapMode = createArgs.WrapMode;
 
-		Color32[] pixels = new Color32[header.W*header.H];
-		byte[] column = new byte[header.H];
-		bool bIsTransparent = (header.Transparent & 0x8) != 0;
+			Color32[] pixels = new Color32[header.W*header.H];
+			byte[] column = new byte[header.H];
+			bool bIsTransparent = (header.Transparent & 0x8) != 0;
 
-		for (int x = 0; x < header.W; ++x) {
-			if (columnOffsets != null) {
-				stream.SeekSet(columnOffsets[x]);
-			}
+			for (int x = 0; x < header.W; ++x) {
+				if (columnOffsets != null) {
+					stream.SeekSet(columnOffsets[x]);
+				}
 
-			DecodeColumn(stream, column, header.Compressed);
+				DecodeColumn(stream, column, header.Compressed);
 
-			int pixelOfs = x;
+				int pixelOfs = x;
 
-			for (int y = 0; y < header.H; ++y, pixelOfs += header.H) {
-				byte color = column[y];
+				for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
+					byte color = column[y];
 
-				if (bIsTransparent && (color == 0)) {
-					pixels[pixelOfs] = PAL.Transparent;
-				} else {
-					pixels[pixelOfs] = createArgs.Pal.Colors[color];
+					if (bIsTransparent && (color == 0)) {
+						pixels[pixelOfs] = PAL.Transparent;
+					} else {
+						pixels[pixelOfs] = createArgs.Pal.Colors[color];
+					}
 				}
 			}
+
+			texture.SetPixels32(pixels);
+			texture.Apply();
+
+			return new Frame(texture, bIsTransparent);
+		} catch (UnityException e) {
+			throw e;
 		}
-
-		texture.SetPixels32(pixels);
-		texture.Apply();
-
-		return new Frame(texture, bIsTransparent);
 	}
 
 	private Header ReadHeader(ByteStream stream, EHeaderType headerType) {

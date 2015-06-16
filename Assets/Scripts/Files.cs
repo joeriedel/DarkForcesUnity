@@ -2,7 +2,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013 Joseph Riedel
+ * Copyright (c) 2015 Joseph Riedel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public sealed class Files {
+public sealed class Files : System.IDisposable {
 
 	public Files() {
 		_assetPath = Application.dataPath;
@@ -89,6 +89,18 @@ public sealed class Files {
 			Debug.LogError("Failed to open " + name);
 		}
 		return gob;
+	}
+
+	public void Dispose() {
+		foreach (var gob in _gobs) {
+			gob.Dispose();
+		}
+		_gobs = null;
+		System.GC.SuppressFinalize(this);
+	}
+
+	public List<GOBFile> GOBs {
+		get { return _gobs; }
 	}
 
 	private string _assetPath;
