@@ -174,6 +174,7 @@ public sealed class LEV : Asset {
 			Sector sector = ParseSectorHeader(levelTokens);
 			ParseSectorVertices(sector, levelTokens);
 			ParseSectorWalls(sector, levelTokens);
+			Sectors.Add(sector);
 		}
 	}
 
