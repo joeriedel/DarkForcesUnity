@@ -43,6 +43,8 @@ public sealed class BM : Asset {
 		public Frame(Texture2D texture, bool bIsTransparent) {
 			_texture = texture;
 			_bIsTransparent = bIsTransparent;
+			_wRecip = 1.0f / texture.width;
+			_hRecip = 1.0f / texture.height;
 		}
 
 		public void DisposeTexture() {
@@ -54,9 +56,13 @@ public sealed class BM : Asset {
 
 		public Texture2D Texture { get { return _texture; } }
 		public bool bIsTraparent { get { return _bIsTransparent; } }
+		public float WRecip { get { return _wRecip; } }
+		public float HRecip { get { return _hRecip; } }
 
 		private Texture2D _texture;
 		private bool _bIsTransparent;
+		private float _wRecip;
+		private float _hRecip;
 	}
 
 	public BM(string name, byte[] data, object createArgs) : base(name, Type.BM) {

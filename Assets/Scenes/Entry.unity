@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f1ef0f94773d41548ca86bdf51c5eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WallMaterial: {fileID: 2100000, guid: 508c3edaf494b7b4aa5450ab6c4cb0a2, type: 2}
+  WallSolid: {fileID: 2100000, guid: 508c3edaf494b7b4aa5450ab6c4cb0a2, type: 2}
 --- !u!4 &322430852
 Transform:
   m_ObjectHideFlags: 0

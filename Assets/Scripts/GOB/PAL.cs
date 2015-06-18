@@ -42,7 +42,7 @@ public sealed class PAL : Asset {
 	}
 
 	static PAL() {
-		_transparentColor = new Color32(0, 255, 255, 0);
+		_transparentColor = new Color32(0, 0, 0, 0);
 	}
 
 	static byte ExpandPalByte(byte c) {

@@ -30,7 +30,7 @@ using System.Collections.Generic;
 /*! Main game class. */
 public class Game : MonoBehaviour {
 
-	public Material WallMaterial;
+	public Material WallSolid;
 	private iMUSE _iMuse;
 	private World _world;
 

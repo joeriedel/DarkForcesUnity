@@ -39,6 +39,7 @@ public sealed class LEV : Asset {
 	public class Wall {
 		[System.Flags]
 		public enum EFlags0 {
+			None = 0,
 			AlwaysDrawMid = 0x1,
 			IlluminatedSign = 0x2,
 			FlipHorz = 0x4,
@@ -57,6 +58,7 @@ public sealed class LEV : Asset {
 
 		[System.Flags]
 		public enum EFlags2 {
+			None = 0,
 			AlwaysWalk = 0x1,
 			BlocksAll = 0x2,
 			BlocksEnemy = 0x4,
@@ -80,6 +82,7 @@ public sealed class LEV : Asset {
 	public class Sector {
 		[System.Flags]
 		public enum EFlags0 {
+			None = 0,
 			Sky = 0x1,
 			Door = 0x2,
 			Bounce = 0x4,
@@ -202,7 +205,7 @@ public sealed class LEV : Asset {
 
 		levelTokens.EnsureNextToken("FLOOR");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.FloorAlt = levelTokens.RequireNextFloat();
+		sector.FloorAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("CEILING");
 		levelTokens.EnsureNextToken("TEXTURE");
@@ -213,11 +216,11 @@ public sealed class LEV : Asset {
 
 		levelTokens.EnsureNextToken("CEILING");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.CeilAlt = levelTokens.RequireNextFloat();
+		sector.CeilAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("SECOND");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.SecondAlt = levelTokens.RequireNextFloat();
+		sector.SecondAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("FLAGS");
 		sector.Flags0 = (Sector.EFlags0)levelTokens.RequireNextInt();
