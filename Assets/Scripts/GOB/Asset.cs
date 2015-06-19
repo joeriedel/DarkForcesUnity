@@ -49,7 +49,7 @@ public abstract class Asset : System.IDisposable {
 	}
 
 	public void Dispose() {
-		RuntimeCheck.Assert(_refCount > 0, "RefCount error!");
+		RuntimeCheck.Assert(_refCount >= 0, "RefCount error! (" + Name + ")");
 
 		if (--_refCount == 0) {
 			if (!_bIsCached) {
@@ -211,6 +211,7 @@ public abstract class Asset : System.IDisposable {
 
 		foreach (Asset asset in s_assets.Values) {
 			if (asset._bIsCached && (asset.RefCount == 0)) {
+				asset._bIsCached = false;
 				purgeList.Add(asset.Name);
 				asset.Dispose(true);
 			}

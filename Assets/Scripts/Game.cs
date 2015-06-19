@@ -44,6 +44,16 @@ public class Game : MonoBehaviour {
 	void Start() {
 		_world = new World(this);
 		_world.Load("SECBASE.LEV");
+
+		_iMuse = GetComponent<iMUSE>();
+
+		//using (GMD stalk = Asset.LoadCached<GMD>("STALK-01.GMD")) {
+		//	using (GMD fight = Asset.LoadCached<GMD>("FIGHT-01.GMD")) {
+		//		_iMuse.PlayLevelMusic(stalk, fight);
+		//	}
+		//}
+
+		Asset.PurgeCache();
 	}
 
 	static void CreateQuad(Mesh mesh, float W, float H) {

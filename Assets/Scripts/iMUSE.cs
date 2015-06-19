@@ -378,21 +378,21 @@ public class iMUSE : MonoBehaviour {
 
 	// OnGUI is called for rendering and handling
 	// GUI events.
-	void OnGUI() {
-		// Make a background box
-		GUILayout.BeginArea(new Rect(Screen.width / 2 - 75, Screen.height / 2 - 50, 150, 300));
+	//void OnGUI() {
+	//	// Make a background box
+	//	GUILayout.BeginArea(new Rect(Screen.width / 2 - 75, Screen.height / 2 - 50, 150, 300));
 
-		if (GUILayout.Button(_bSwitchToFight ? "Stalk" : "Fight")) {
-			_bSwitchToFight = !_bSwitchToFight;
+	//	if (GUILayout.Button(_bSwitchToFight ? "Stalk" : "Fight")) {
+	//		_bSwitchToFight = !_bSwitchToFight;
 
-			if (!_bSwitchToFight) {
-				ResetTransitionTimeout();
-			}
-		}
+	//		if (!_bSwitchToFight) {
+	//			ResetTransitionTimeout();
+	//		}
+	//	}
 
-		// End the Groups and Area	
-		GUILayout.EndArea();
-	}
+	//	// End the Groups and Area	
+	//	GUILayout.EndArea();
+	//}
 
 	public bool SwitchToFight {
 		get { return _bSwitchToFight; }

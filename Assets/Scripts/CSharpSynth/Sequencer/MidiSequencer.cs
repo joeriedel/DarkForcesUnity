@@ -38,7 +38,7 @@ namespace CSharpSynth.Sequencer
         }
         public int EndSampleTime
         {
-			get { return (int)_MidiFile.Tracks[trackNumber].TotalTime; }
+			get { return (_MidiFile != null) ? (int)_MidiFile.Tracks[trackNumber].TotalTime : 0; }
         }
         public TimeSpan EndTime
         {
