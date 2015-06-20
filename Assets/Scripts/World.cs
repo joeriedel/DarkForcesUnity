@@ -81,16 +81,47 @@ public class World : System.IDisposable {
 	}
 
 	private void GenerateSectors() {
-		for (int i = 0; i < _lev.Sectors.Count; ++i) {
-			GenerateSector(i);
+		//for (int i = 0; i < _lev.Sectors.Count; ++i) {
+		//	GenerateSector(i);
+		//}
+		//GenerateSector(172);
+		//GenerateSector(36);
+		GenerateSector(5);
+	}
+
+	private bool CheckSector(LEV.Sector sector) {
+		// all vertices in sector should be shared by at least 2 walls.
+		List<int> count = new List<int>(sector.Vertices.Count);
+		for (int i = 0; i < sector.Vertices.Count; ++i) {
+			count.Add(0);
 		}
+
+		foreach (var wall in sector.Walls) {
+			count[wall.V0] = count[wall.V0] + 1;
+			count[wall.V1] = count[wall.V1] + 1;
+		}
+
+		for (int i = 0; i < sector.Vertices.Count; ++i) {
+			if (count[i] < 2) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private void GenerateSector(int sectorIndex) {
-		Sector sector = new Sector();
-		_sectors.Add(sector);
+		Debug.Log("Generating sector " + sectorIndex);
 
+		Sector sector = new Sector();
 		sector.LEVSector = _lev.Sectors[sectorIndex];
+
+		if (!CheckSector(sector.LEVSector)) {
+			Debug.Log("Sector " + sectorIndex + " is bad, removing. ");
+			return;
+		}
+
+		_sectors.Add(sector);
 
 		sector.GO = new GameObject("Sector" + sectorIndex, typeof(MeshFilter), typeof(MeshRenderer));
 		sector.GO.transform.parent = _sectorsGO.transform;
@@ -104,13 +135,70 @@ public class World : System.IDisposable {
 
 		List<List<int>> meshTris = new List<List<int>>();
 
-		sector.Vertices = new Vector3[sector.LEVSector.Walls.Count * 4 * 3];
+		int numWalls = 0;
+		int numFloors = 0;
+
+		if ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.NoWalls) == LEV.Sector.EFlags0.None) {
+			numWalls = sector.LEVSector.Walls.Count;
+		}
+
+		bool hasFloor = ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.SkyFloor) == LEV.Sector.EFlags0.None) && (sector.LEVSector.FloorTex != -1);
+		bool hasCeil = ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.SkyCeil) == LEV.Sector.EFlags0.None) && (sector.LEVSector.CeilTex != -1);
+
+		//hasFloor = false;
+		//hasCeil = false;
+
+		if (hasFloor) {
+			++numFloors;
+		}
+
+		if (hasCeil) {
+			++numFloors;
+		}
+
+		if ((numFloors == 0) && (numWalls == 0)) {
+			return;
+		}
+
+		sector.Vertices = new Vector3[(sector.LEVSector.Vertices.Count*numFloors) + (numWalls * 4 * 3)];
 		sector.UVs = new Vector2[sector.Vertices.Length];
-		sector.Materials = new Material[sector.LEVSector.Walls.Count * 3];
+		sector.Materials = new Material[numFloors + (numWalls * 3)];
+
+		// add floor / cieling verts
+		int ceilVertOfs = 0;
+
+		if (hasFloor) {
+			for (int i = 0; i < sector.LEVSector.Vertices.Count; ++i) {
+				Vector2 v2 = sector.LEVSector.Vertices[i];
+				sector.Vertices[i] = new Vector3(v2.x, sector.LEVSector.FloorAlt, v2.y);
+			}
+			ceilVertOfs = sector.LEVSector.Vertices.Count;
+		}
+
+		if (hasCeil) {
+			for (int i = 0; i < sector.LEVSector.Vertices.Count; ++i) {
+				Vector2 v2 = sector.LEVSector.Vertices[i];
+				sector.Vertices[i + ceilVertOfs] = new Vector3(v2.x, sector.LEVSector.CeilAlt, v2.y);
+			}
+		}
+
+		if (hasFloor || hasCeil) {
+			List<int> floorTris = new List<int>();
+			List<int> ceilTris = new List<int>();
+			GenerateSectorFloorsAndCeilings(sector.LEVSector, hasFloor, hasCeil, ref floorTris, ref ceilTris, sector.UVs, sector.Materials);
+
+			if (hasFloor) {
+				meshTris.Add(floorTris);
+			}
+
+			if (hasCeil) {
+				meshTris.Add(ceilTris);
+			}
+		}
 
 		// assume every wall has an adjoin with top/bottom quads
 		for (int i = 0; i < sector.LEVSector.Walls.Count; ++i) {
-			int baseIndex = i * 12;
+			int baseIndex = (sector.LEVSector.Vertices.Count*numFloors) + i * 12;
 			List<int> top = new List<int>();
 			GenerateQuadTris(baseIndex, top);
 			List<int> mid = new List<int>();
@@ -122,7 +210,7 @@ public class World : System.IDisposable {
 			meshTris.Add(mid);
 			meshTris.Add(bottom);
 
-			MakeSectorWall(sector, i);
+			MakeSectorWall(sector, i, numFloors + (i*3), baseIndex);
 		}
 
 		sector.Mesh.vertices = sector.Vertices;
@@ -134,11 +222,9 @@ public class World : System.IDisposable {
 			var m = meshTris[i];
 			sector.Mesh.SetTriangles(m.ToArray(), i);
 		}
-
-		//GenerateSectorFloorsAndCeilings(lev, sector, );
 	}
 
-	private void MakeSectorWall(Sector sector, int wallIndex) {
+	private void MakeSectorWall(Sector sector, int wallIndex, int materialIndex, int baseVertexOfs) {
 		
 		LEV.Wall levWall = sector.LEVSector.Walls[wallIndex];
 		Wall wall = new Wall();
@@ -164,8 +250,6 @@ public class World : System.IDisposable {
 
 		sector.Walls.Add(wall);
 
-		int materialIndex = wallIndex * 3;
-
 		Material matTop = new Material(_game.WallSolid);
 		Material matMid = new Material(_game.WallSolid);
 		Material matBottom = new Material(_game.WallSolid);
@@ -178,15 +262,13 @@ public class World : System.IDisposable {
 		sector.Materials[materialIndex + 1] = matMid;
 		sector.Materials[materialIndex + 2] = matBottom;
 
-		UpdateSectorWall(sector, wallIndex);
+		UpdateSectorWall(sector, wallIndex, baseVertexOfs);
 	}
 
-	private void UpdateSectorWall(Sector sector, int wallIndex) {
+	private void UpdateSectorWall(Sector sector, int wallIndex, int baseVertexOfs) {
 		LEV.Sector adjoin = null;
 		LEV.Wall LEVWall = sector.LEVSector.Walls[wallIndex];
 		Wall wall = sector.Walls[wallIndex];
-
-		int baseVertexOfs = wallIndex*12;
 
 		if (LEVWall.Adjoin != -1) {
 			adjoin = _lev.Sectors[LEVWall.Adjoin];
@@ -312,25 +394,51 @@ public class World : System.IDisposable {
 		sector.UVs[vertexOfs + 3] = uv3;
 	}
 
-	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, Vector3[] verts, List<int> outTris, List<Vector3> outVerts, List<Vector2> outUVs, List<Material> outMats) {
-		/*
-		List<Poly2Tri.TriangulationPoint> tessVerts = new List<Poly2Tri.TriangulationPoint>(sector.Vertices.Count);
+	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats) {
+		List<int> tess = SectorTess.TesselateSector(sector);
+
+		int vertOfs = 0;
+		int matOfs = 0;
+
+		if (hasFloor) {
+			outFloorTris = tess;
+			BM bm = _textures[sector.FloorTex] ?? _defaultTexture;
+			outMats[0] = new Material(_game.WallSolid);
+			outMats[0].mainTexture = bm.Frames[0].Texture;
+			UpdateFloorUVs(sector, bm, sector.FloorShiftX, sector.FloorShiftZ, vertOfs, outUVs);
+			vertOfs += sector.Vertices.Count;
+			++matOfs;
+		}
+
+		if (hasCeil) {
+			outCeilTris = new List<int>(tess.Count);
+			for (int i = 0; i < tess.Count; i += 3) {
+				outCeilTris.Add(tess[i+2] + vertOfs);
+				outCeilTris.Add(tess[i+1] + vertOfs);
+				outCeilTris.Add(tess[i] + vertOfs);
+			}
+
+			BM bm = _textures[sector.CeilTex] ?? _defaultTexture;
+			outMats[matOfs] = new Material(_game.WallSolid);
+			outMats[matOfs].mainTexture = bm.Frames[0].Texture;
+			UpdateFloorUVs(sector, bm, sector.CeilShiftX, sector.CeilShiftZ, vertOfs, outUVs);
+		}
+	}
+
+	private void UpdateFloorUVs(LEV.Sector sector, BM bm, float shiftX, float shiftY, int ofs, Vector2[] outUVs) {
+		BM.Frame frame = bm.Frames[0];
+		float w = frame.Texture.width;
+		float h = frame.Texture.height;
+		float rw = frame.WRecip;
+		float rh = frame.HRecip;
+
 		for (int i = 0; i < sector.Vertices.Count; ++i) {
-			tessVerts[i].X = sector.Vertices[i].x;
-			tessVerts[i].Y = sector.Vertices[i].y;
+			Vector2 v = sector.Vertices[i];
+			float s = (v.x % w) * 8;
+			float t = (v.y % h) * 8;
+
+			outUVs[ofs + i] = new Vector2(s*rw, 1f-(t*rh));
 		}
-
-		List<Poly2Tri.TriangulationConstraint> tessConstraint = new List<Poly2Tri.TriangulationConstraint>(sector.Walls.Count);
-		for (int i = 0; i < sector.Walls.Count; ++i) {
-			tessConstraint[i] = new Poly2Tri.TriangulationConstraint(
-				tessVerts[sector.Walls[i].V0],
-				tessVerts[sector.Walls[i].V1]
-			);
-		}
-
-		Poly2Tri.P2T.Triangulate(new Poly2Tri.ConstrainedPointSet(tessVerts, tessConstraint));
-		*/
-
 	}
 
 	public void Dispose() {
