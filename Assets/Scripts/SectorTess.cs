@@ -225,8 +225,6 @@ public class SectorTess {
 			_segSteps.Add(CopySegList(sector, segs));
 		}
 
-		int br = 0;
-
 		for (var node = segs.First; node != null;) {
 
 			List<int> validVerts = new List<int>();
@@ -239,14 +237,7 @@ public class SectorTess {
 
 			verts = validVerts;
 
-			if (br == 16) {
-				int b=0;
-			}
-
 			node = MakeSegTri(sector, node, verts, counts, tris, debugDraw);
-			if (node != null) {
-				++br;
-			}
 		}
 
 		if (segs.Count > 0) {
@@ -424,10 +415,6 @@ public class SectorTess {
 		}
 
 		for (int i = 0; i < sector.Vertices.Count; ++i) {
-			if (i == 11) {
-				int d=0;
-			}
-
 			if ((seg0.IdxA != i) && (seg0.IdxB != i) &&
 				(seg1.IdxA != i) && (seg1.IdxB != i) &&
 				(seg2.IdxA != i) && (seg2.IdxB != i)) {
@@ -485,10 +472,6 @@ public class SectorTess {
 		segs.Remove(seg);
 
 		Incr(counts, index, 2);
-
-		if (!CheckSegCounts(segs, counts)) {
-			int b = 0;
-		}
 
 		if (debugDraw) {
 			DebugDrawStep(sector, segs, addSeg0, addSeg1, outTris);
