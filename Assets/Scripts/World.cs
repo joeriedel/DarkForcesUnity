@@ -81,12 +81,13 @@ public class World : System.IDisposable {
 	}
 
 	private void GenerateSectors() {
-		//for (int i = 0; i < _lev.Sectors.Count; ++i) {
-		//	GenerateSector(i);
-		//}
+		for (int i = 0; i < _lev.Sectors.Count; ++i) {
+			GenerateSector(i);
+		}
 		//GenerateSector(172);
 		//GenerateSector(36);
-		GenerateSector(5);
+		//GenerateSector(5, true);
+		//GenerateSector(192, true);
 	}
 
 	private bool CheckSector(LEV.Sector sector) {
@@ -110,8 +111,8 @@ public class World : System.IDisposable {
 		return true;
 	}
 
-	private void GenerateSector(int sectorIndex) {
-		Debug.Log("Generating sector " + sectorIndex);
+	private void GenerateSector(int sectorIndex, bool debugDraw = false) {
+		//Debug.Log("Generating sector " + sectorIndex);
 
 		Sector sector = new Sector();
 		sector.LEVSector = _lev.Sectors[sectorIndex];
@@ -185,7 +186,7 @@ public class World : System.IDisposable {
 		if (hasFloor || hasCeil) {
 			List<int> floorTris = new List<int>();
 			List<int> ceilTris = new List<int>();
-			GenerateSectorFloorsAndCeilings(sector.LEVSector, hasFloor, hasCeil, ref floorTris, ref ceilTris, sector.UVs, sector.Materials);
+			GenerateSectorFloorsAndCeilings(sector.LEVSector, sectorIndex, hasFloor, hasCeil, ref floorTris, ref ceilTris, sector.UVs, sector.Materials, debugDraw);
 
 			if (hasFloor) {
 				meshTris.Add(floorTris);
@@ -197,7 +198,7 @@ public class World : System.IDisposable {
 		}
 
 		// assume every wall has an adjoin with top/bottom quads
-		for (int i = 0; i < sector.LEVSector.Walls.Count; ++i) {
+		for (int i = 0; i < numWalls; ++i) {
 			int baseIndex = (sector.LEVSector.Vertices.Count*numFloors) + i * 12;
 			List<int> top = new List<int>();
 			GenerateQuadTris(baseIndex, top);
@@ -394,8 +395,8 @@ public class World : System.IDisposable {
 		sector.UVs[vertexOfs + 3] = uv3;
 	}
 
-	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats) {
-		List<int> tess = SectorTess.TesselateSector(sector);
+	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, int sectorIndex, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats, bool debugDraw) {
+		List<int> tess = SectorTess.TesselateSector(sector, sectorIndex, debugDraw);
 
 		int vertOfs = 0;
 		int matOfs = 0;
@@ -434,8 +435,8 @@ public class World : System.IDisposable {
 
 		for (int i = 0; i < sector.Vertices.Count; ++i) {
 			Vector2 v = sector.Vertices[i];
-			float s = (v.x % w) * 8;
-			float t = (v.y % h) * 8;
+			float s = -(v.x-shiftX)*8f;
+			float t = -(v.y-shiftY)*8f;
 
 			outUVs[ofs + i] = new Vector2(s*rw, 1f-(t*rh));
 		}
