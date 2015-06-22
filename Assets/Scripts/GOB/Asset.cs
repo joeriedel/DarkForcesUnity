@@ -31,6 +31,7 @@ public abstract class Asset : System.IDisposable {
 	public enum Type {
 		BLOB,
 		BM,
+		CMP,
 		GMD,
 		LEV,
 		PAL,
@@ -95,6 +96,8 @@ public abstract class Asset : System.IDisposable {
 
 		if (ext == "BM") {
 			return Type.BM;
+		}  else if (ext == "CMP") {
+			return Type.CMP;
 		} else if (ext == "GMD") {
 			return Type.GMD;
 		} else if (ext == "LEV") {
@@ -169,6 +172,9 @@ public abstract class Asset : System.IDisposable {
 			switch (type) {
 				case Type.BM:
 					asset = new BM(name, data, createArgs);
+					break;
+				case Type.CMP:
+					asset = new CMP(name, data, createArgs);
 					break;
 				case Type.GMD:
 					asset = new GMD(name, data, createArgs);

@@ -35,7 +35,7 @@ public sealed class BM : Asset {
 		public int AnisoLevel = 9;
 		public FilterMode FilterMode = FilterMode.Trilinear;
 		public TextureWrapMode WrapMode = TextureWrapMode.Repeat;
-		public TextureFormat TextureFormat = TextureFormat.RGBA32;
+		public TextureFormat TextureFormat = TextureFormat.ARGB32;
 		public PAL Pal;
 	}
 
@@ -156,15 +156,25 @@ public sealed class BM : Asset {
 
 				DecodeColumn(stream, column, header.Compressed);
 
-				int pixelOfs = x;
+				if (createArgs.TextureFormat == TextureFormat.Alpha8) {
+					int pixelOfs = x;
 
-				for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
-					byte color = column[y];
+					for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
+						byte color = column[y];
+						pixels[pixelOfs] = new Color32(color, color, color, color);
+					}
 
-					if (bIsTransparent && (color == 0)) {
-						pixels[pixelOfs] = PAL.Transparent;
-					} else {
-						pixels[pixelOfs] = createArgs.Pal.Colors[color];
+				} else {
+					int pixelOfs = x;
+
+					for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
+						byte color = column[y];
+
+						if (bIsTransparent && (color == 0)) {
+							pixels[pixelOfs] = PAL.Transparent;
+						} else {
+							pixels[pixelOfs] = createArgs.Pal.Colors[color];
+						}
 					}
 				}
 			}

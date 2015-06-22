@@ -258,6 +258,12 @@ public sealed class LEV : Asset {
 
 		for (int i = 0; i < numWalls; ++i) {
 			Wall wall = ParseWall(levelTokens);
+			if ((wall.Light + sector.Ambient) > 31) {
+				wall.Light = 31 - sector.Ambient;
+			} else if ((wall.Light + sector.Ambient) < 0) {
+				wall.Light = -sector.Ambient;
+			}
+
 			sector.Walls.Add(wall);
 		}
 	}

@@ -25,27 +25,45 @@
 
 using UnityEngine;
 
-/*! Dark Forces palette file. */
-public sealed class PAL : Asset {
+/*! Dark Forces colormap file. */
+public sealed class CMP : Asset {
 
-	public PAL(string name, byte[] data, object createArgs) : base(name, Type.PAL) {
-		if (data.Length != 768) {
-			throw new InvalidDataException("Dark forces palette files are 768 bytes long!");
+	public CMP(string name, byte[] data, object createArgs)
+		: base(name, Type.PAL) {
+		if (data.Length != 8320) {
+			throw new InvalidDataException("Dark forces colormap files are 8320 bytes long!");
 		}
 
-		_colors = new Color32[256];
+		_colorMap = data;
 
-		int palOfs = 0;
-		for (int i = 0; i < _colors.Length; ++i, palOfs += 3) {
-			_colors[i] = new Color32(ExpandPalByte(data[palOfs]), ExpandPalByte(data[palOfs+1]), ExpandPalByte(data[palOfs+2]), 255);
-		}
-
-		_texture = new Texture2D(256, 1, TextureFormat.ARGB32, false, false);
+		_texture = new Texture2D(256, 33, TextureFormat.Alpha8, false, false);
 		_texture.anisoLevel = 0;
 		_texture.filterMode = FilterMode.Point;
 		_texture.wrapMode = TextureWrapMode.Clamp;
 
-		_texture.SetPixels32(_colors);
+		Color32[] colors = new Color32[256*33];
+
+		int ofs;
+		for (int i = 0; i < 32; ++i) {
+			ofs = 256*i;
+
+			for (int j = 0; j < 256; ++j) {
+				byte c = _colorMap[ofs+j];
+				colors[ofs+j] = new Color32(c, c, c, c);
+			}
+		}
+
+		ofs = 256*32;
+		for (int i = 0; i < 128; ++i) {
+			byte c = _colorMap[ofs+i];
+			colors[ofs+i] = new Color32(c, c, c, c);
+		}
+		ofs = 256*32+128;
+		for (int i = 0; i < 128; ++i) {
+			colors[ofs+i] = new Color32(0, 0, 0, 0);
+		}
+
+		_texture.SetPixels32(colors);
 		_texture.Apply();
 	}
 
@@ -58,20 +76,9 @@ public sealed class PAL : Asset {
 		}
 	}
 
-	static PAL() {
-		_transparentColor = new Color32(0, 0, 0, 0);
-	}
-
-	static byte ExpandPalByte(byte c) {
-		return (byte)(c/63f*255f);
-	}
-
-	public static Color32 Transparent { get { return _transparentColor; } }
-
-	public Color32[] Colors { get { return _colors; } }
+	public byte[] ColorMap { get { return _colorMap; } }
 	public Texture Texture { get { return _texture; } }
 
-	private Color32[] _colors;
-	private static Color32 _transparentColor;
+	private byte[] _colorMap;
 	private static Texture2D _texture;
 }

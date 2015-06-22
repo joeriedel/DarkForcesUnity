@@ -33,6 +33,8 @@ public class World : System.IDisposable {
 	BM _defaultTexture;
 	List<BM> _textures = new List<BM>();
 	LEV _lev;
+	PAL _pal;
+	CMP _cmp;
 	List<Sector> _sectors = new List<Sector>();
 
 	class Wall {
@@ -58,26 +60,32 @@ public class World : System.IDisposable {
 	}
 
 	public void Load(string LEVname) {
-		_lev = Asset.LoadCached<LEV>(LEVname);
-		using (PAL pal = Asset.LoadCached<PAL>(_lev.Palette.ToUpper())) {
+		_lev = Asset.LoadCached<LEV>(LEVname + ".LEV");
+		_pal = Asset.LoadCached<PAL>(_lev.Palette.ToUpper());
+		_cmp = Asset.LoadCached<CMP>(LEVname + ".CMP");
 
-			BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
-			bmCreateArgs.Pal = pal;
+		_game.SolidCMP.SetTexture("_PAL", _pal.Texture);
+		_game.SolidCMP.SetTexture("_CMP", _cmp.Texture);
+		
+		BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
+		bmCreateArgs.TextureFormat = TextureFormat.Alpha8;
+		bmCreateArgs.AnisoLevel = 0;
+		bmCreateArgs.FilterMode = FilterMode.Point;
+		bmCreateArgs.bMipmap = false;
 			
-			foreach (var texName in _lev.Textures) {
-				try {
-					BM bm = Asset.LoadCached<BM>(texName.ToUpper(), bmCreateArgs);
-					_textures.Add(bm);
-					if (_defaultTexture == null) {
-						_defaultTexture = bm;
-					}
-				} catch (System.IO.FileNotFoundException) {
-					_textures.Add(null);
+		foreach (var texName in _lev.Textures) {
+			try {
+				BM bm = Asset.LoadCached<BM>(texName.ToUpper(), bmCreateArgs);
+				_textures.Add(bm);
+				if (_defaultTexture == null) {
+					_defaultTexture = bm;
 				}
+			} catch (System.IO.FileNotFoundException) {
+				_textures.Add(null);
 			}
-
-			GenerateSectors();
 		}
+
+		GenerateSectors();
 	}
 
 	private void GenerateSectors() {
@@ -251,9 +259,15 @@ public class World : System.IDisposable {
 
 		sector.Walls.Add(wall);
 
-		Material matTop = new Material(_game.WallSolid);
-		Material matMid = new Material(_game.WallSolid);
-		Material matBottom = new Material(_game.WallSolid);
+		Material matTop = new Material(_game.SolidCMP);
+		Material matMid = new Material(_game.SolidCMP);
+		Material matBottom = new Material(_game.SolidCMP);
+
+		float lightLevel = sector.LEVSector.Ambient + levWall.Light;
+
+		matTop.SetFloat("_LightLevel", lightLevel);
+		matMid.SetFloat("_LightLevel", lightLevel);
+		matBottom.SetFloat("_LightLevel", lightLevel);
 
 		matTop.mainTexture = wall.Top.Frames[0].Texture;
 		matMid.mainTexture = wall.Mid.Frames[0].Texture;
@@ -404,8 +418,9 @@ public class World : System.IDisposable {
 		if (hasFloor) {
 			outFloorTris = tess;
 			BM bm = _textures[sector.FloorTex] ?? _defaultTexture;
-			outMats[0] = new Material(_game.WallSolid);
+			outMats[0] = new Material(_game.SolidCMP);
 			outMats[0].mainTexture = bm.Frames[0].Texture;
+			outMats[0].SetFloat("_LightLevel", sector.Ambient);
 			UpdateFloorUVs(sector, bm, sector.FloorShiftX, sector.FloorShiftZ, vertOfs, outUVs);
 			vertOfs += sector.Vertices.Count;
 			++matOfs;
@@ -420,8 +435,9 @@ public class World : System.IDisposable {
 			}
 
 			BM bm = _textures[sector.CeilTex] ?? _defaultTexture;
-			outMats[matOfs] = new Material(_game.WallSolid);
+			outMats[matOfs] = new Material(_game.SolidCMP);
 			outMats[matOfs].mainTexture = bm.Frames[0].Texture;
+			outMats[matOfs].SetFloat("_LightLevel", sector.Ambient);
 			UpdateFloorUVs(sector, bm, sector.CeilShiftX, sector.CeilShiftZ, vertOfs, outUVs);
 		}
 	}
@@ -449,6 +465,8 @@ public class World : System.IDisposable {
 		_textures = null;
 
 		_lev.Dispose();
+		_pal.Dispose();
+		_cmp.Dispose();
 
 		GameObject.Destroy(_sectorsGO);
 
