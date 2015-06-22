@@ -266,10 +266,6 @@ public class SectorTess {
 
 		LinkedList<Seg> segs = node.List;
 
-		if (node.Value.WallIdx == 3) {
-			int b = 0;
-		}
-
 		// can we trivially make a triangle from our connected seg?
 		List<LinkedListNode<Seg>> connectedSegs = FindConnectedSegs(segs, node.Value, node.Value.IdxB);
 		if (connectedSegs == null) {
