@@ -117,6 +117,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SolidCMP: {fileID: 2100000, guid: b39ce771e988cce4e9d1960b778f1a74, type: 2}
+  Solid: {fileID: 2100000, guid: 508c3edaf494b7b4aa5450ab6c4cb0a2, type: 2}
+  EmulateCMPShading: 1
 --- !u!4 &322430852
 Transform:
   m_ObjectHideFlags: 0

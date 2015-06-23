@@ -68,11 +68,20 @@ public class World : System.IDisposable {
 		_game.SolidCMP.SetTexture("_CMP", _cmp.Texture);
 		
 		BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
-		bmCreateArgs.TextureFormat = TextureFormat.Alpha8;
-		bmCreateArgs.AnisoLevel = 0;
-		bmCreateArgs.FilterMode = FilterMode.Point;
-		bmCreateArgs.bMipmap = false;
-			
+		bmCreateArgs.Pal = _pal;
+
+		if (_game.EmulateCMPShading) {
+			bmCreateArgs.TextureFormat = TextureFormat.Alpha8;
+			bmCreateArgs.AnisoLevel = 0;
+			bmCreateArgs.FilterMode = FilterMode.Point;
+			bmCreateArgs.bMipmap = false;
+		} else {
+			bmCreateArgs.TextureFormat = TextureFormat.RGBA32;
+			bmCreateArgs.AnisoLevel = 9;
+			bmCreateArgs.FilterMode = FilterMode.Trilinear;
+			bmCreateArgs.bMipmap = true;
+		}
+
 		foreach (var texName in _lev.Textures) {
 			try {
 				BM bm = Asset.LoadCached<BM>(texName.ToUpper(), bmCreateArgs);
@@ -259,15 +268,17 @@ public class World : System.IDisposable {
 
 		sector.Walls.Add(wall);
 
-		Material matTop = new Material(_game.SolidCMP);
-		Material matMid = new Material(_game.SolidCMP);
-		Material matBottom = new Material(_game.SolidCMP);
+		Material matTop = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
+		Material matMid = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
+		Material matBottom = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 
 		float lightLevel = sector.LEVSector.Ambient + levWall.Light;
 
-		matTop.SetFloat("_LightLevel", lightLevel);
-		matMid.SetFloat("_LightLevel", lightLevel);
-		matBottom.SetFloat("_LightLevel", lightLevel);
+		if (_game.EmulateCMPShading) {
+			matTop.SetFloat("_LightLevel", lightLevel);
+			matMid.SetFloat("_LightLevel", lightLevel);
+			matBottom.SetFloat("_LightLevel", lightLevel);
+		}
 
 		matTop.mainTexture = wall.Top.Frames[0].Texture;
 		matMid.mainTexture = wall.Mid.Frames[0].Texture;
@@ -418,9 +429,11 @@ public class World : System.IDisposable {
 		if (hasFloor) {
 			outFloorTris = tess;
 			BM bm = _textures[sector.FloorTex] ?? _defaultTexture;
-			outMats[0] = new Material(_game.SolidCMP);
+			outMats[0] = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 			outMats[0].mainTexture = bm.Frames[0].Texture;
-			outMats[0].SetFloat("_LightLevel", sector.Ambient);
+			if (_game.EmulateCMPShading) {
+				outMats[0].SetFloat("_LightLevel", sector.Ambient);
+			}
 			UpdateFloorUVs(sector, bm, sector.FloorShiftX, sector.FloorShiftZ, vertOfs, outUVs);
 			vertOfs += sector.Vertices.Count;
 			++matOfs;
@@ -435,9 +448,11 @@ public class World : System.IDisposable {
 			}
 
 			BM bm = _textures[sector.CeilTex] ?? _defaultTexture;
-			outMats[matOfs] = new Material(_game.SolidCMP);
+			outMats[matOfs] = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 			outMats[matOfs].mainTexture = bm.Frames[0].Texture;
-			outMats[matOfs].SetFloat("_LightLevel", sector.Ambient);
+			if (_game.EmulateCMPShading) {
+				outMats[matOfs].SetFloat("_LightLevel", sector.Ambient);
+			}
 			UpdateFloorUVs(sector, bm, sector.CeilShiftX, sector.CeilShiftZ, vertOfs, outUVs);
 		}
 	}

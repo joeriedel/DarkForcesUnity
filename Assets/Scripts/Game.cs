@@ -31,6 +31,9 @@ using System.Collections.Generic;
 public class Game : MonoBehaviour {
 
 	public Material SolidCMP;
+	public Material Solid;
+	public bool EmulateCMPShading;
+
 	private iMUSE _iMuse;
 	private World _world;
 

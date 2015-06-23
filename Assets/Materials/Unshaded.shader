@@ -7,19 +7,37 @@
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf Lambert
+		#pragma vertex vert
+		#pragma fragment frag
+		#pragma target 3.0
 
 		sampler2D _MainTex;
-
-		struct Input {
-			float2 uv_MainTex;
+		
+		struct appdata_t
+		{
+			float4 vertex   : POSITION;
+			float2 texcoord : TEXCOORD0;
 		};
 
-		void surf (Input IN, inout SurfaceOutput o) {
-			half4 c = tex2D (_MainTex, IN.uv_MainTex);
-			o.Albedo = c.rgb;
-			o.Alpha = c.a;
+		struct v2f
+		{
+			float4 vertex        : POSITION;
+			float2 texcoord      : TEXCOORD0;
+		};
+
+		v2f vert(appdata_t IN)
+		{
+			v2f OUT;
+			OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+			OUT.texcoord = IN.texcoord;
+			return OUT;
 		}
+
+		float4 frag(v2f IN) : COLOR
+		{
+			return tex2D(_MainTex, IN.texcoord);
+		}
+
 		ENDCG
 	} 
 	FallBack "Diffuse"
