@@ -293,7 +293,7 @@ public class World : System.IDisposable {
 
 		// top
 
-		if ((adjoin != null) && (sector.LEVSector.CeilAlt > adjoin.CeilAlt)) {
+		if ((adjoin != null) && ((sector.LEVSector.CeilAlt > adjoin.CeilAlt) && ((adjoin.Flags0 & LEV.Sector.EFlags0.SkyCeil) == LEV.Sector.EFlags0.None))) {
 			secondAlt = adjoin.CeilAlt;
 		}
 
@@ -315,7 +315,7 @@ public class World : System.IDisposable {
 
 		if ((adjoin == null) || ((LEVWall.Flags0 & LEV.Wall.EFlags0.AlwaysDrawMid) != LEV.Wall.EFlags0.None)) {
 			secondAlt = sector.LEVSector.FloorAlt;
-		} else {
+		} else if ((adjoin.Flags0 & LEV.Sector.EFlags0.SkyFloor) == LEV.Sector.EFlags0.None) {
 			secondAlt = sector.LEVSector.CeilAlt;
 		}
 
