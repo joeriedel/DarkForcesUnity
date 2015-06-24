@@ -68,13 +68,19 @@ namespace EditorTools {
 			using (PAL pal = Asset.New("RAMSHED.PAL", _files.Load("RAMSHED.PAL"), Asset.Type.PAL, null) as PAL) {
 
 				BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
+				bmCreateArgs.FilterMode = FilterMode.Point;
+				bmCreateArgs.bMipmap = false;
+				bmCreateArgs.AnisoLevel = 0;
 				bmCreateArgs.Pal = pal;
 
 				foreach (var gob in _files.GOBs) {
 					foreach (var file in gob.Files) {
 						switch (Asset.TypeForName(file.Name)) {
 							case Asset.Type.BM:
-							_views.Add(new GOBBMViewer(Asset.Load(file, bmCreateArgs) as BM));
+								_views.Add(new GOBBMViewer(Asset.Load(file, bmCreateArgs) as BM));
+							break;
+							case Asset.Type.FME:
+								_views.Add(new GOBFMEViewer(Asset.Load(file, bmCreateArgs) as FME));
 							break;
 						}
 					}
@@ -100,6 +106,8 @@ namespace EditorTools {
 			GUILayout.BeginHorizontal();
 
 			GOBBMViewer.Show = GUILayout.Toggle(GOBBMViewer.Show, "BM");
+			GOBFMEViewer.Show = GUILayout.Toggle(GOBFMEViewer.Show, "FME");
+			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
 			foreach (var viewer in _views) {
@@ -117,7 +125,7 @@ namespace EditorTools {
 
 	public class GOBBMViewer : GOBResourceViewer {
 
-		public static bool Show = true;
+		public static bool Show = false;
 		float scale;
 		float frame;
 		float FPS;
@@ -126,7 +134,7 @@ namespace EditorTools {
 			_bm = bm;
 
 			float edge = Mathf.Max(bm.Frames[0].Texture.width, bm.Frames[0].Texture.height);
-			scale = Mathf.Clamp(64f / edge, 0.1f, 1f);
+			scale = Mathf.Clamp(64f / edge, 0.1f, 5f);
 
 			frame = 0f;
 
@@ -151,7 +159,7 @@ namespace EditorTools {
 
 			GUILayout.Label(_bm.Name + " - " + _bm.Frames[0].Texture.width + "x" + _bm.Frames[0].Texture.height, EditorStyles.boldLabel);
 
-			scale = GUILayout.HorizontalSlider(scale, 0.1f, 1f, GUILayout.Width(200));
+			scale = GUILayout.HorizontalSlider(scale, 0.1f, 5f, GUILayout.Width(200));
 			float w = _bm.Frames[iframe].Texture.width * scale;
 			float h = _bm.Frames[iframe].Texture.height * scale;
 
@@ -161,5 +169,36 @@ namespace EditorTools {
 		}
 
 		private BM _bm;
+	}
+
+	public class GOBFMEViewer : GOBResourceViewer {
+
+		public static bool Show = false;
+		float scale;
+
+		public GOBFMEViewer(FME fme) : base(fme) {
+			_fme = fme;
+
+			float edge = Mathf.Max(fme.Frame.Texture.width, fme.Frame.Texture.height);
+			scale = Mathf.Clamp(64f / edge, 0.1f, 5f);
+		}
+
+		public override bool Visibile {
+			get { return Show; }
+		}
+
+		public override void OnGUI() {
+			GUILayout.Label(_fme.Name + " - " + _fme.Frame.Texture.width + "x" + _fme.Frame.Texture.height, EditorStyles.boldLabel);
+
+			scale = GUILayout.HorizontalSlider(scale, 0.1f, 5f, GUILayout.Width(200));
+			float w = _fme.Frame.Texture.width * scale;
+			float h = _fme.Frame.Texture.height * scale;
+
+			var r = GUILayoutUtility.GetRect(w, h, GUILayout.Width(w), GUILayout.Height(h));
+			GUI.DrawTexture(r, _fme.Frame.Texture);
+
+		}
+
+		private FME _fme;
 	}
 }

@@ -39,7 +39,7 @@ public sealed class BM : Asset {
 		public PAL Pal;
 	}
 
-	public class Frame {
+	public class Frame : System.IDisposable {
 		public Frame(Texture2D texture, bool bIsTransparent) {
 			_texture = texture;
 			_bIsTransparent = bIsTransparent;
@@ -47,9 +47,13 @@ public sealed class BM : Asset {
 			_hRecip = 1.0f / texture.height;
 		}
 
-		public void DisposeTexture() {
+		public void Dispose() {
 			if (_texture != null) {
-				Object.Destroy(_texture);
+				if (Application.isPlaying) {
+					Object.Destroy(_texture);
+				} else {
+					Object.DestroyImmediate(_texture);
+				}
 				_texture = null;
 			}
 		}
@@ -82,12 +86,8 @@ public sealed class BM : Asset {
 
 	protected override void OnDispose() {
 		base.OnDispose();
-		foreach (Frame frame in _frames) {
-			if (Application.isPlaying) {
-				Object.Destroy(frame.Texture);
-			} else {
-				Object.DestroyImmediate(frame.Texture);
-			}
+		foreach (var frame in _frames) {
+			frame.Dispose();
 		}
 		_frames = null;
 	}
@@ -136,7 +136,7 @@ public sealed class BM : Asset {
 		}
 	}
 
-	private Frame ReadColumns(ByteStream stream, Header header, int[] columnOffsets, CreateArgs createArgs) {
+	public static Frame ReadColumns(ByteStream stream, Header header, int[] columnOffsets, CreateArgs createArgs) {
 
 		try {
 			Texture2D texture = new Texture2D(header.W, header.H, createArgs.TextureFormat, createArgs.bMipmap, false);
@@ -212,7 +212,7 @@ public sealed class BM : Asset {
 		return header;
 	}
 
-	private void DecodeColumn(ByteStream stream, byte[] columnOut, int compressed) {
+	private static void DecodeColumn(ByteStream stream, byte[] columnOut, int compressed) {
 		if (compressed == 0) {
 			// uncompressed.
 			for (int y = 0; y < columnOut.Length; ++y) {
@@ -222,14 +222,14 @@ public sealed class BM : Asset {
 			// rle1
 			for (int y = 0; y < columnOut.Length; ) {
 				int code = stream.ReadByte();
-				if ((code & 0x80) != 0) {
+				if (code > 128) {
 					byte color = (byte)stream.ReadByte();
 					int repeat = code & 0x7f;
-					while (--repeat > 0) {
+					while (repeat-- > 0) {
 						columnOut[y++] = color;
 					}
 				} else {
-					while (--code > 0) {
+					while (code-- > 0) {
 						columnOut[y++] = (byte)stream.ReadByte();
 					}
 				}
@@ -238,13 +238,13 @@ public sealed class BM : Asset {
 			// rle2 (transparent coding)
 			for (int y = 0; y < columnOut.Length; ) {
 				int code = stream.ReadByte();
-				if ((code & 0x80) != 0) {
+				if (code > 128) {
 					int skip = code & 0x7f;
-					while (--skip > 0) {
+					while (skip-- > 0) {
 						columnOut[y++] = 0;
 					}
 				} else {
-					while (--code > 0) {
+					while (code-- > 0) {
 						columnOut[y++] = (byte)stream.ReadByte();
 					}
 				}
@@ -257,7 +257,7 @@ public sealed class BM : Asset {
 		SubHeader
 	}
 
-	private struct Header {
+	public struct Header {
 		public int W;
 		public int H;
 		public int IY;

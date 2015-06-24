@@ -1,4 +1,4 @@
-﻿/* PAL.cs
+﻿/* CMP.cs
  *
  * The MIT License (MIT)
  *

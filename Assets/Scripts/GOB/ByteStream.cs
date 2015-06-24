@@ -116,11 +116,11 @@ public class ByteStream : IDisposable {
 	}
 
 	public int ReadLittleInt32(int numBytes) {
-		return BitConverter.ToInt32(SafeReadLittle(numBytes, 4, true), 0);
+		return BitConverter.ToInt32(SafeReadLittle(numBytes, 4), 0);
 	}
 
 	public int ReadBigInt32(int numBytes) {
-		return BitConverter.ToInt32(SafeReadBig(numBytes, 4, true), 0);
+		return BitConverter.ToInt32(SafeReadBig(numBytes, 4), 0);
 	}
 
 	public uint ReadLittleUInt32() {
@@ -132,11 +132,11 @@ public class ByteStream : IDisposable {
 	}
 
 	public uint ReadLittleUInt32(int numBytes) {
-		return BitConverter.ToUInt32(SafeReadLittle(numBytes, 4, false), 0);
+		return BitConverter.ToUInt32(SafeReadLittle(numBytes, 4), 0);
 	}
 
 	public uint ReadBigUInt32(int numBytes) {
-		return BitConverter.ToUInt32(SafeReadBig(numBytes, 4, false), 0);
+		return BitConverter.ToUInt32(SafeReadBig(numBytes, 4), 0);
 	}
 
 	public long ReadLittleInt64() {
@@ -144,7 +144,7 @@ public class ByteStream : IDisposable {
 	}
 
 	public long ReadLittleInt64(int numBytes) {
-		return BitConverter.ToInt64(SafeReadLittle(numBytes, 8, true), 0);
+		return BitConverter.ToInt64(SafeReadLittle(numBytes, 8), 0);
 	}
 
 	public long ReadBigInt64() {
@@ -152,7 +152,7 @@ public class ByteStream : IDisposable {
 	}
 
 	public long ReadBigInt64(int numBytes) {
-		return BitConverter.ToInt64(SafeReadBig(numBytes, 8, true), 0);
+		return BitConverter.ToInt64(SafeReadBig(numBytes, 8), 0);
 	}
 
 	public ulong ReadLittleUInt64() {
@@ -160,7 +160,7 @@ public class ByteStream : IDisposable {
 	}
 
 	public ulong ReadLittleUInt64(int numBytes) {
-		return BitConverter.ToUInt64(SafeReadLittle(numBytes, 8, false), 0);
+		return BitConverter.ToUInt64(SafeReadLittle(numBytes, 8), 0);
 	}
 
 	public ulong ReadBigUInt64() {
@@ -168,7 +168,7 @@ public class ByteStream : IDisposable {
 	}
 
 	public ulong ReadBigUInt64(int numBytes) {
-		return BitConverter.ToUInt64(SafeReadBig(numBytes, 8, false), 0);
+		return BitConverter.ToUInt64(SafeReadBig(numBytes, 8), 0);
 	}
 
 	public float ReadLittleSingle() {
@@ -180,11 +180,11 @@ public class ByteStream : IDisposable {
 	}
 
 	public float ReadLittleSingle(int numBytes) {
-		return BitConverter.ToSingle(SafeReadLittle(numBytes, 4, false), 0);
+		return BitConverter.ToSingle(SafeReadLittle(numBytes, 4), 0);
 	}
 
 	public float ReadBigSingle(int numBytes) {
-		return BitConverter.ToSingle(SafeReadBig(numBytes, 4, false), 0);
+		return BitConverter.ToSingle(SafeReadBig(numBytes, 4), 0);
 	}
 
 	public double ReadLittleDouble() {
@@ -196,11 +196,11 @@ public class ByteStream : IDisposable {
 	}
 
 	public double ReadLittleDouble(int numBytes) {
-		return BitConverter.ToDouble(SafeReadLittle(numBytes, 8, false), 0);
+		return BitConverter.ToDouble(SafeReadLittle(numBytes, 8), 0);
 	}
 
 	public double ReadBigDouble(int numBytes) {
-		return BitConverter.ToDouble(SafeReadBig(numBytes, 8, false), 0);
+		return BitConverter.ToDouble(SafeReadBig(numBytes, 8), 0);
 	}
 
 	public void Write(byte[] bytes) {
@@ -341,7 +341,7 @@ public class ByteStream : IDisposable {
 		_stream.Write(bytes, 0, bytes.Length);
 	}
 
-	private byte[] SafeReadLittle(int numBytes, int maxLen, bool sign) {
+	private byte[] SafeReadLittle(int numBytes, int maxLen) {
 		if ((numBytes < 1) || (numBytes > maxLen))
 			throw new ArgumentException("Invalid byte count for data-type");
 		byte[] bytes = new byte[maxLen];
@@ -349,13 +349,10 @@ public class ByteStream : IDisposable {
 		if (z < numBytes)
 			throw new EndOfStreamException();
 		SwapLittle(bytes);
-		if (sign) {
-			DecodeSignBit(bytes, numBytes);
-		}
 		return bytes;
 	}
 
-	private byte[] SafeReadBig(int numBytes, int maxLen, bool sign) {
+	private byte[] SafeReadBig(int numBytes, int maxLen) {
 		if ((numBytes < 1) || (numBytes > maxLen))
 			throw new ArgumentException("Invalid byte count for data-type");
 		byte[] bytes = new byte[maxLen];
@@ -363,21 +360,7 @@ public class ByteStream : IDisposable {
 		if (z < numBytes)
 			throw new EndOfStreamException();
 		SwapBig(bytes);
-		if (sign) {
-			DecodeSignBit(bytes, numBytes);
-		}
 		return bytes;
-	}
-
-	private void DecodeSignBit(byte[] bytes, int len) {
-		int srcSignBit = BitConverter.IsLittleEndian ? (len-1) : (bytes.Length-len);
-		int dstSignBit = BitConverter.IsLittleEndian ? (bytes.Length-1) : 0;
-
-		bool sign = (bytes[srcSignBit] & SignBit) != 0;
-		if (sign) {
-			bytes[srcSignBit] &= SignBit;
-			bytes[dstSignBit] |= SignBit;
-		}
 	}
 
 	private static byte[] Trim(byte[] bytes, int count) {

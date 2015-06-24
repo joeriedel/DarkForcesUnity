@@ -33,6 +33,7 @@ public abstract class Asset : System.IDisposable {
 		BM,
 		CMP,
 		GMD,
+		FME,
 		LEV,
 		PAL,
 		VOC
@@ -102,6 +103,8 @@ public abstract class Asset : System.IDisposable {
 			return Type.GMD;
 		} else if (ext == "LEV") {
 			return Type.LEV;
+		} else if (ext == "FME") {
+			return Type.FME;
 		} else if (ext == "PAL") {
 			return Type.PAL;
 		} else if (ext == "VOC") {
@@ -184,6 +187,9 @@ public abstract class Asset : System.IDisposable {
 					break;
 				case Type.PAL:
 					asset = new PAL(name, data, createArgs);
+					break;
+				case Type.FME:
+					asset = new FME(name, data, createArgs);
 					break;
 				case Type.VOC:
 					asset = new VOC(name, data, createArgs);
