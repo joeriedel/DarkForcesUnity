@@ -307,7 +307,7 @@ public sealed class VOC : SoundAsset {
 		int bytesPerSample = rate.bits / 8;
 		int numSamples = pcm.Length / (bytesPerSample * rate.channels);
 
-		AudioClip clip = AudioClip.Create(Name, numSamples, rate.channels, rate.rate, false);
+		AudioClip clip = AudioClip.Create(name, numSamples, rate.channels, rate.rate, false);
 
 		float[] samples;
 		if (rate.bits == 8) {
@@ -442,12 +442,12 @@ public sealed class VOC : SoundAsset {
 		}
 	};
 
-	private AudioClip _audioClip;
-	private List<Block> _blocks;
-	private int _blockSamples;
-	private bool _audioSourceShouldLoop;
-	private bool _loop;
-	private AudioClipSoundInstance _clipInstance;
+	AudioClip _audioClip;
+	List<Block> _blocks;
+	int _blockSamples;
+	bool _audioSourceShouldLoop;
+	bool _loop;
+	AudioClipSoundInstance _clipInstance;
 }
 
 public sealed class VOCStreamingSoundInstance : SoundInstance {
@@ -463,7 +463,7 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 		SeekAudio();
 	}
 
-	public override AudioClip AudioClip {
+	public override AudioClip audioClip {
 		get {
 			return _clip;
 		}
@@ -481,7 +481,7 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 
 	private AudioClip CreateStreamingAudio(int totalSamples) {
 		return AudioClip.Create(
-			Sound.Name, 
+			Sound.name, 
 			totalSamples, 
 			_rate.channels, 
 			_rate.rate,
@@ -598,11 +598,11 @@ public sealed class VOCStreamingSoundInstance : SoundInstance {
 		}
 	}
 
-	private AudioClip _clip;
-	private VOC.Rate _rate;
-	private List<VOC.Block> _blocks;
-	private int _position;
-	private int _startOfBlock;
-	private int _blockIdx;
-	private int _blockLoop;
+	AudioClip _clip;
+	VOC.Rate _rate;
+	List<VOC.Block> _blocks;
+	int _position;
+	int _startOfBlock;
+	int _blockIdx;
+	int _blockLoop;
 }

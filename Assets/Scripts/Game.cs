@@ -37,11 +37,16 @@ public class Game : MonoBehaviour {
 	private iMUSE _iMuse;
 	private World _world;
 
-	void Awake() {
-		Asset.StaticInit(this);
+	public static Game instance {
+		get;
+		private set;
+	}
 
-		_files = new Files();
-		_files.Initialize();
+	void Awake() {
+		instance = this;
+
+		files = new Files();
+		files.Initialize();
 	}
 
 	void Start() {
@@ -91,7 +96,9 @@ public class Game : MonoBehaviour {
 	void Update() {
 	}
 
-	public Files Files { get { return _files; } }
+	public Files files {
+		get;
+		private set;
+	}
 
-	private Files _files;
 }

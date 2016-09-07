@@ -29,10 +29,12 @@ using System.Collections;
 public class BLOB : Asset {
 
 	public BLOB(string name, byte[] data) : base(name, Type.BLOB) {
-		_data = data;
+		this.data = data;
 	}
 
-	public byte[] Data { get { return _data; } }
-
-	private byte[] _data;
+	public byte[] data {
+		get;
+		private set;
+	}
+	
 }

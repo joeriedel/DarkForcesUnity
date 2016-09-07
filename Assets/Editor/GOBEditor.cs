@@ -52,12 +52,12 @@ public class GOBEditorWindow : EditorWindow {
 
 			foreach (GOBFile.File file in gob.Files) {
 				try {
-					using (FileStream sysFile = File.Create(folderPath + "/" + file.Name)) {
+					using (FileStream sysFile = File.Create(folderPath + "/" + file.name)) {
 						byte[] data = file.Load();
 						sysFile.Write(data, 0, data.Length);
 					}
 				} catch (System.Exception) {
-					Debug.Log("Error extracting GOB '" + gobPath + "', file '" + file.Name + "'");
+					Debug.Log("Error extracting GOB '" + gobPath + "', file '" + file.name + "'");
 					return false;
 				}
 			}

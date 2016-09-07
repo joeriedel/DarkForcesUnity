@@ -68,7 +68,7 @@ public abstract class SoundAsset : Asset {
 				_instances = new List<SoundInstance>();
 			}
 			_instances.Add(instance);
-			_sound.Reference();
+			_sound.AddRef();
 		}
 
 		public void RemoveInstance(SoundInstance instance) {
@@ -97,7 +97,7 @@ public abstract class SoundInstance : System.IDisposable {
 		_internal.AddInstance(this);
 	}
 
-	public abstract AudioClip AudioClip { get; }
+	public abstract AudioClip audioClip { get; }
 
 	public void Dispose() {
 		if (--_refCount == 0) {
@@ -114,7 +114,7 @@ public abstract class SoundInstance : System.IDisposable {
 
 	public virtual void AttachToAudioSource(AudioSource source) {
 		source.loop = Sound.AudioSourceShouldLoop;
-		source.clip = AudioClip;
+		source.clip = audioClip;
 	}
 
 	public SoundAsset Sound { get { return _internal.Sound; } }
@@ -134,7 +134,7 @@ public sealed class AudioClipSoundInstance : SoundInstance {
 		_clip = clip;
 	}
 
-	public override AudioClip AudioClip {
+	public override AudioClip audioClip {
 		get {
 			return _clip;
 		}

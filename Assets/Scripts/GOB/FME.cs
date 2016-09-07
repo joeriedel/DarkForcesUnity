@@ -65,20 +65,20 @@ public class FME : Asset {
 		int headerStart = (int)stream.Position;
 
 		BM.Header header = new BM.Header();
-		header.W = stream.ReadLittleInt32();
-		header.H = stream.ReadLittleInt32();
-		header.Compressed = stream.ReadLittleInt32();
-		header.DataSize = stream.ReadLittleInt32();
-		header.Transparent = 0x8;
+		header.w = stream.ReadLittleInt32();
+		header.h = stream.ReadLittleInt32();
+		header.compressed = stream.ReadLittleInt32();
+		header.dataSize = stream.ReadLittleInt32();
+		header.transparent = 0x8;
 
 		stream.Skip(8);
 
 		int[] columnOffsets = null;
 
-		if (header.Compressed != 0) {
-			header.Compressed = 2;
+		if (header.compressed != 0) {
+			header.compressed = 2;
 
-			columnOffsets = new int[header.W];
+			columnOffsets = new int[header.w];
 
 			for (int i = 0; i < columnOffsets.Length; ++i) {
 				columnOffsets[i] = stream.ReadLittleInt32() + headerStart;
@@ -94,9 +94,9 @@ public class FME : Asset {
 		_frame = null;
 	}
 
-	public FMEHeader Header { get { return _header; } }
+	public FMEHeader header { get { return _header; } }
 
-	public BM.Frame Frame { get { return _frame; } }
+	public BM.Frame frame { get { return _frame; } }
 
 	private FMEHeader _header;
 	private BM.Frame _frame;

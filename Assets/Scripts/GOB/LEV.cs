@@ -31,15 +31,14 @@ using System.Collections.Generic;
 public sealed class LEV : Asset {
 
 	public struct WallTex {
-		public int Texture;
-		public float ShiftX;
-		public float ShiftY;
+		public int texture;
+		public float shiftX;
+		public float shiftY;
 	}
 
 	public class Wall {
 		[System.Flags]
 		public enum EFlags0 {
-			None = 0,
 			AlwaysDrawMid = 0x1,
 			IlluminatedSign = 0x2,
 			FlipHorz = 0x4,
@@ -58,31 +57,29 @@ public sealed class LEV : Asset {
 
 		[System.Flags]
 		public enum EFlags2 {
-			None = 0,
 			AlwaysWalk = 0x1,
 			BlocksAll = 0x2,
 			BlocksEnemy = 0x4,
 			BlocksWeapon = 0x8
 		}
 
-		public int V0, V1;
-		public int Adjoin;
-		public int Mirror;
-		public int Walk;
-		public EFlags0 Flags0;
-		public int Flags1;
-		public EFlags2 Flags2;
-		public int Light;
-		public WallTex TexMid;
-		public WallTex TexTop;
-		public WallTex TexBottom;
-		public WallTex TexSign;
+		public int v0, v1;
+		public int adjoin;
+		public int mirror;
+		public int walk;
+		public EFlags0 flags0;
+		public int flags1;
+		public EFlags2 flags2;
+		public int light;
+		public WallTex texMid;
+		public WallTex texTop;
+		public WallTex texBottom;
+		public WallTex texSign;
 	}
 
 	public class Sector {
 		[System.Flags]
 		public enum EFlags0 {
-			None = 0,
 			SkyCeil = 0x1,
 			Door = 0x2,
 			Bounce = 0x4,
@@ -104,23 +101,23 @@ public sealed class LEV : Asset {
 			Secret = 0x40000
 		}
 
-		public string Name;
-		public EFlags0 Flags0;
-		public int Flags1;
-		public int Flags2;
-		public int FloorTex;
-		public int CeilTex;
-		public int Layer;
-		public int Ambient;
-		public float FloorAlt;
-		public float CeilAlt;
-		public float SecondAlt;
-		public float FloorShiftX;
-		public float FloorShiftZ;
-		public float CeilShiftX;
-		public float CeilShiftZ;
-		public List<Vector2> Vertices = new List<Vector2>();
-		public List<Wall> Walls = new List<Wall>();
+		public string name;
+		public EFlags0 flags0;
+		public int flags1;
+		public int flags2;
+		public int floorTex;
+		public int ceilTex;
+		public int layer;
+		public int ambient;
+		public float floorAlt;
+		public float ceilAlt;
+		public float secondAlt;
+		public float floorShiftX;
+		public float floorShiftZ;
+		public float ceilShiftX;
+		public float ceilShiftZ;
+		public List<Vector2> vertices = new List<Vector2>();
+		public List<Wall> walls = new List<Wall>();
 	}
 
 	public LEV(string name, byte[] data, object createArgs) : base(name, Type.LEV) {
@@ -189,47 +186,47 @@ public sealed class LEV : Asset {
 		string sectorName = levelTokens.GetNextToken();
 
 		if (sectorName != "AMBIENT") {
-			sector.Name = sectorName;
+			sector.name = sectorName;
 		} else { // unnamed sector
 			levelTokens.UngetToken();
 		}
 
 		levelTokens.EnsureNextToken("AMBIENT");
-		sector.Ambient = levelTokens.RequireNextInt();
+		sector.ambient = levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("FLOOR");
 		levelTokens.EnsureNextToken("TEXTURE");
-		sector.FloorTex = levelTokens.RequireNextInt();
-		sector.FloorShiftX = levelTokens.RequireNextFloat();
-		sector.FloorShiftZ = levelTokens.RequireNextFloat();
+		sector.floorTex = levelTokens.RequireNextInt();
+		sector.floorShiftX = levelTokens.RequireNextFloat();
+		sector.floorShiftZ = levelTokens.RequireNextFloat();
 		levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("FLOOR");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.FloorAlt = -levelTokens.RequireNextFloat();
+		sector.floorAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("CEILING");
 		levelTokens.EnsureNextToken("TEXTURE");
-		sector.CeilTex = levelTokens.RequireNextInt();
-		sector.CeilShiftX = levelTokens.RequireNextFloat();
-		sector.CeilShiftZ = levelTokens.RequireNextFloat();
+		sector.ceilTex = levelTokens.RequireNextInt();
+		sector.ceilShiftX = levelTokens.RequireNextFloat();
+		sector.ceilShiftZ = levelTokens.RequireNextFloat();
 		levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("CEILING");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.CeilAlt = -levelTokens.RequireNextFloat();
+		sector.ceilAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("SECOND");
 		levelTokens.EnsureNextToken("ALTITUDE");
-		sector.SecondAlt = -levelTokens.RequireNextFloat();
+		sector.secondAlt = -levelTokens.RequireNextFloat();
 
 		levelTokens.EnsureNextToken("FLAGS");
-		sector.Flags0 = (Sector.EFlags0)levelTokens.RequireNextInt();
-		sector.Flags1 = levelTokens.RequireNextInt();
-		sector.Flags2 = levelTokens.RequireNextInt();
+		sector.flags0 = (Sector.EFlags0)levelTokens.RequireNextInt();
+		sector.flags1 = levelTokens.RequireNextInt();
+		sector.flags2 = levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("LAYER");
-		sector.Layer = levelTokens.RequireNextInt();
+		sector.layer = levelTokens.RequireNextInt();
 
 		return sector;
 	}
@@ -247,7 +244,7 @@ public sealed class LEV : Asset {
 			levelTokens.EnsureNextToken("Z:");
 			v.y = levelTokens.RequireNextFloat();
 
-			sector.Vertices.Add(v);
+			sector.vertices.Add(v);
 		}
 	}
 
@@ -258,13 +255,13 @@ public sealed class LEV : Asset {
 
 		for (int i = 0; i < numWalls; ++i) {
 			Wall wall = ParseWall(levelTokens);
-			if ((wall.Light + sector.Ambient) > 31) {
-				wall.Light = 31 - sector.Ambient;
-			} else if ((wall.Light + sector.Ambient) < 0) {
-				wall.Light = -sector.Ambient;
+			if ((wall.light + sector.ambient) > 31) {
+				wall.light = 31 - sector.ambient;
+			} else if ((wall.light + sector.ambient) < 0) {
+				wall.light = -sector.ambient;
 			}
 
-			sector.Walls.Add(wall);
+			sector.walls.Add(wall);
 		}
 	}
 
@@ -274,31 +271,31 @@ public sealed class LEV : Asset {
 		Wall wall = new Wall();
 
 		levelTokens.EnsureNextToken("LEFT:");
-		wall.V0 = levelTokens.RequireNextInt();
+		wall.v0 = levelTokens.RequireNextInt();
 		levelTokens.EnsureNextToken("RIGHT:");
-		wall.V1 = levelTokens.RequireNextInt();
+		wall.v1 = levelTokens.RequireNextInt();
 
-		wall.TexMid = ParseWallTex("MID:", levelTokens, true);
-		wall.TexTop = ParseWallTex("TOP:", levelTokens, true);
-		wall.TexBottom = ParseWallTex("BOT:", levelTokens, true);
-		wall.TexSign = ParseWallTex("SIGN:", levelTokens, false);
+		wall.texMid = ParseWallTex("MID:", levelTokens, true);
+		wall.texTop = ParseWallTex("TOP:", levelTokens, true);
+		wall.texBottom = ParseWallTex("BOT:", levelTokens, true);
+		wall.texSign = ParseWallTex("SIGN:", levelTokens, false);
 
 		levelTokens.EnsureNextToken("ADJOIN:");
-		wall.Adjoin = levelTokens.RequireNextInt();
+		wall.adjoin = levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("MIRROR:");
-		wall.Mirror = levelTokens.RequireNextInt();
+		wall.mirror = levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("WALK:");
-		wall.Walk = levelTokens.RequireNextInt();
+		wall.walk = levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("FLAGS:");
-		wall.Flags0 = (Wall.EFlags0)levelTokens.RequireNextInt();
-		wall.Flags1 = levelTokens.RequireNextInt();
-		wall.Flags2 = (Wall.EFlags2)levelTokens.RequireNextInt();
+		wall.flags0 = (Wall.EFlags0)levelTokens.RequireNextInt();
+		wall.flags1 = levelTokens.RequireNextInt();
+		wall.flags2 = (Wall.EFlags2)levelTokens.RequireNextInt();
 
 		levelTokens.EnsureNextToken("LIGHT:");
-		wall.Light = levelTokens.RequireNextInt();
+		wall.light = levelTokens.RequireNextInt();
 
 		return wall;
 	}
@@ -308,9 +305,9 @@ public sealed class LEV : Asset {
 
 		WallTex tex = new WallTex();
 
-		tex.Texture = levelTokens.RequireNextInt();
-		tex.ShiftX = levelTokens.RequireNextFloat();
-		tex.ShiftY = levelTokens.RequireNextFloat();
+		tex.texture = levelTokens.RequireNextInt();
+		tex.shiftX = levelTokens.RequireNextFloat();
+		tex.shiftY = levelTokens.RequireNextFloat();
 
 		if (trailing) {
 			levelTokens.RequireNextInt();

@@ -67,7 +67,7 @@ public sealed class GOBFile : System.IDisposable {
 			byte[] name = new byte[13];
 			for (int i = 0; i < numFiles; ++i) {
 				File file = File.Read(br, name);
-				gob._dir.Add(file.Name, file);
+				gob._dir.Add(file.name, file);
 				// Debug.Log (file.Name);
 			}
 
@@ -100,9 +100,9 @@ public sealed class GOBFile : System.IDisposable {
 	public class File {
 
 		private File(BinaryReader br, int ofs, int len, string name) {
-			_ofs = ofs;
-			_len = len;
-			_name = name;
+			this.ofs = ofs;
+			this.len = len;
+			this.name = name;
 			_br = br;
 		}
 
@@ -115,20 +115,28 @@ public sealed class GOBFile : System.IDisposable {
 		}
 
 		public byte[] Load() {
-			byte[] data = new byte[_len];
-			_br.BaseStream.Position = Ofs;
-			_br.Read(data, 0, _len);
+			byte[] data = new byte[len];
+			_br.BaseStream.Position = ofs;
+			_br.Read(data, 0, len);
 			return data;
 		}
 
-		public int Ofs { get { return _ofs; } }
-		public int Len { get { return _len; } }
-		public string Name { get { return _name; } }
+		public int ofs {
+			get;
+			private set;
+		}
 
-		private int _ofs;
-		private int _len;
-		private string _name;
-		private BinaryReader _br;
+		public int len {
+			get;
+			private set;
+		}
+
+		public string name {
+			get;
+			private set;
+		}
+
+		BinaryReader _br;
 	}
 
 	private BinaryReader _file;

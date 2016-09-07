@@ -37,7 +37,10 @@ public sealed class GMD : Asset {
 		}
 	}
 
-	public byte[] MidiData { get { return _midiData; } }
+	public byte[] midiData {
+		get;
+		private set;
+	}
 
 	void ExtractMIDI(ByteStream stream) {
 		if (stream.ReadString(4) != "MIDI") {
@@ -49,7 +52,7 @@ public sealed class GMD : Asset {
 		while ((type = GetChunkType(stream)) != null) {
 			if (type == "MThd") {
 				long size = stream.Length - stream.Position;
-				_midiData = stream.Read((int)size);
+				midiData = stream.Read((int)size);
 				return;
 			}
 
@@ -74,6 +77,5 @@ public sealed class GMD : Asset {
 		stream.SeekSet(pos);
 		return type;
 	}
-
-	byte[] _midiData;
+	
 }

@@ -30,10 +30,11 @@ using System.Collections.Generic;
 public sealed class Files : System.IDisposable {
 
 	public Files() {
-		_assetPath = Application.dataPath;
-		_basePath = _assetPath + "/..";
-		_darkPath = _basePath + "/DARK/";
-		Debug.Log ("Starting files at '" + _basePath + "'...");
+		assetPath = Application.dataPath;
+		basePath = assetPath + "/..";
+		darkPath = basePath + "/DARK/";
+		lfdPath = darkPath + "LFD/";
+		Debug.Log ("Mounting files at '" + basePath + "'...");
 	}
 
 	public bool Initialize() {
@@ -48,16 +49,24 @@ public sealed class Files : System.IDisposable {
 		return true;
 	}
 
-	public string AssetPath {
-		get { return _assetPath; }
+	public string assetPath {
+		get;
+		private set;
 	}
 
-	public string BasePath {
-		get { return _basePath; }
+	public string basePath {
+		get;
+		private set;
 	}
 
-	public string DarkPath {
-		get { return _darkPath; }
+	public string darkPath {
+		get;
+		private set;
+	}
+
+	public string lfdPath {
+		get;
+		private set;
 	}
 
 	public byte[] Load(string name) {
@@ -73,11 +82,11 @@ public sealed class Files : System.IDisposable {
 	}
 
 	private GOBFile OpenDarkGOB(string name) {
-		return OpenGOB(DarkPath + name);
+		return OpenGOB(darkPath + name);
 	}
 
 	private GOBFile OpenUserGOB(string name) {
-		return OpenGOB(BasePath + name);
+		return OpenGOB(basePath + name);
 	}
 
 	private GOBFile OpenGOB(string name) {
@@ -103,8 +112,5 @@ public sealed class Files : System.IDisposable {
 		get { return _gobs; }
 	}
 
-	private string _assetPath;
-	private string _basePath;
-	private string _darkPath;
 	private List<GOBFile> _gobs = new List<GOBFile>();
 }

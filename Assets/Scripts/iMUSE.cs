@@ -128,7 +128,7 @@ public class iMUSE : MonoBehaviour {
 	public void PlayLevelMusic(GMD stalk, GMD fight) {
 		_bIsPlayingLevelMusic = true;
 
-		MidiFile stalkMidi = new MidiFile(stalk.MidiData);
+		MidiFile stalkMidi = new MidiFile(stalk.midiData);
 
 		_stalkSequences = new MusicSequences();
 		_stalkSequences.FirstTrack = 0;
@@ -139,7 +139,7 @@ public class iMUSE : MonoBehaviour {
 		}
 
 		if (fight != null) {
-			MidiFile fightMidi = new MidiFile(fight.MidiData);
+			MidiFile fightMidi = new MidiFile(fight.midiData);
 
 			_fightSequences = new MusicSequences();
 			_fightSequences.FirstTrack = _stalkSequences.NumTracks;

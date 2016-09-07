@@ -43,15 +43,26 @@ public class World : System.IDisposable {
 	};
 
 	class Sector {
-		public LEV.Sector LEVSector;
-		public GameObject GO;
-		public Mesh Mesh;
-		public MeshFilter MeshFilter;
-		public MeshRenderer MeshRenderer;
-		public Vector3[] Vertices;
-		public Vector2[] UVs;
-		public Material[] Materials;
-		public List<Wall> Walls = new List<Wall>();
+		public LEV.Sector levSector;
+		public GameObject go;
+		public Mesh mesh;
+		public MeshFilter meshFilter;
+		public MeshRenderer meshRenderer;
+		public Vector3[] vertices;
+		public Vector2[] uvs;
+		public Material[] materials;
+		public List<Wall> walls = new List<Wall>();
+
+		public void Destroy() {
+			if (materials != null) {
+				for (int i = 0; i < materials.Length; ++i) {
+					GameObject.Destroy(materials[i]);
+				}
+			}
+			if (go != null) {
+				GameObject.Destroy(go);
+			}
+		}
 	};
 	
 	public World(Game game) {
@@ -64,21 +75,21 @@ public class World : System.IDisposable {
 		_pal = Asset.LoadCached<PAL>(_lev.Palette.ToUpper());
 		_cmp = Asset.LoadCached<CMP>(LEVname + ".CMP");
 
-		_game.SolidCMP.SetTexture("_PAL", _pal.Texture);
-		_game.SolidCMP.SetTexture("_CMP", _cmp.Texture);
+		_game.SolidCMP.SetTexture("_PAL", _pal.texture);
+		_game.SolidCMP.SetTexture("_CMP", _cmp.texture);
 		
 		BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
-		bmCreateArgs.Pal = _pal;
+		bmCreateArgs.pal = _pal;
 
 		if (_game.EmulateCMPShading) {
-			bmCreateArgs.TextureFormat = TextureFormat.Alpha8;
-			bmCreateArgs.AnisoLevel = 0;
-			bmCreateArgs.FilterMode = FilterMode.Point;
+			bmCreateArgs.textureFormat = TextureFormat.Alpha8;
+			bmCreateArgs.anisoLevel = 0;
+			bmCreateArgs.filterMode = FilterMode.Point;
 			bmCreateArgs.bMipmap = false;
 		} else {
-			bmCreateArgs.TextureFormat = TextureFormat.RGBA32;
-			bmCreateArgs.AnisoLevel = 9;
-			bmCreateArgs.FilterMode = FilterMode.Trilinear;
+			bmCreateArgs.textureFormat = TextureFormat.RGBA32;
+			bmCreateArgs.anisoLevel = 9;
+			bmCreateArgs.filterMode = FilterMode.Trilinear;
 			bmCreateArgs.bMipmap = true;
 		}
 
@@ -109,17 +120,17 @@ public class World : System.IDisposable {
 
 	private bool CheckSector(LEV.Sector sector) {
 		// all vertices in sector should be shared by at least 2 walls.
-		List<int> count = new List<int>(sector.Vertices.Count);
-		for (int i = 0; i < sector.Vertices.Count; ++i) {
+		List<int> count = new List<int>(sector.vertices.Count);
+		for (int i = 0; i < sector.vertices.Count; ++i) {
 			count.Add(0);
 		}
 
-		foreach (var wall in sector.Walls) {
-			count[wall.V0] = count[wall.V0] + 1;
-			count[wall.V1] = count[wall.V1] + 1;
+		foreach (var wall in sector.walls) {
+			count[wall.v0] = count[wall.v0] + 1;
+			count[wall.v1] = count[wall.v1] + 1;
 		}
 
-		for (int i = 0; i < sector.Vertices.Count; ++i) {
+		for (int i = 0; i < sector.vertices.Count; ++i) {
 			if (count[i] < 2) {
 				return false;
 			}
@@ -132,36 +143,36 @@ public class World : System.IDisposable {
 		//Debug.Log("Generating sector " + sectorIndex);
 
 		Sector sector = new Sector();
-		sector.LEVSector = _lev.Sectors[sectorIndex];
+		sector.levSector = _lev.Sectors[sectorIndex];
 
-		if (!CheckSector(sector.LEVSector)) {
+		if (!CheckSector(sector.levSector)) {
 			Debug.Log("Sector " + sectorIndex + " is bad, removing. ");
 			return;
 		}
 
 		_sectors.Add(sector);
 
-		sector.GO = new GameObject("Sector" + sectorIndex, typeof(MeshFilter), typeof(MeshRenderer));
-		sector.GO.transform.parent = _sectorsGO.transform;
+		sector.go = new GameObject("Sector" + sectorIndex, typeof(MeshFilter), typeof(MeshRenderer));
+		sector.go.transform.parent = _sectorsGO.transform;
 
-		sector.Mesh = new Mesh();
+		sector.mesh = new Mesh();
 
-		sector.MeshFilter = sector.GO.GetComponent<MeshFilter>();
-		sector.MeshRenderer = sector.GO.GetComponent<MeshRenderer>();
+		sector.meshFilter = sector.go.GetComponent<MeshFilter>();
+		sector.meshRenderer = sector.go.GetComponent<MeshRenderer>();
 
-		sector.MeshFilter.mesh = sector.Mesh;
+		sector.meshFilter.mesh = sector.mesh;
 
 		List<List<int>> meshTris = new List<List<int>>();
 
 		int numWalls = 0;
 		int numFloors = 0;
 
-		if ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.NoWalls) == LEV.Sector.EFlags0.None) {
-			numWalls = sector.LEVSector.Walls.Count;
+		if ((sector.levSector.flags0 & LEV.Sector.EFlags0.NoWalls) == 0) {
+			numWalls = sector.levSector.walls.Count;
 		}
 
-		bool hasFloor = ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.SkyFloor) == LEV.Sector.EFlags0.None) && (sector.LEVSector.FloorTex != -1);
-		bool hasCeil = ((sector.LEVSector.Flags0 & LEV.Sector.EFlags0.SkyCeil) == LEV.Sector.EFlags0.None) && (sector.LEVSector.CeilTex != -1);
+		bool hasFloor = ((sector.levSector.flags0 & LEV.Sector.EFlags0.SkyFloor) == 0) && (sector.levSector.floorTex != -1);
+		bool hasCeil = ((sector.levSector.flags0 & LEV.Sector.EFlags0.SkyCeil) == 0) && (sector.levSector.ceilTex != -1);
 
 		//hasFloor = false;
 		//hasCeil = false;
@@ -178,32 +189,32 @@ public class World : System.IDisposable {
 			return;
 		}
 
-		sector.Vertices = new Vector3[(sector.LEVSector.Vertices.Count*numFloors) + (numWalls * 4 * 3)];
-		sector.UVs = new Vector2[sector.Vertices.Length];
-		sector.Materials = new Material[numFloors + (numWalls * 3)];
+		sector.vertices = new Vector3[(sector.levSector.vertices.Count*numFloors) + (numWalls * 4 * 3)];
+		sector.uvs = new Vector2[sector.vertices.Length];
+		sector.materials = new Material[numFloors + (numWalls * 3)];
 
-		// add floor / cieling verts
+		// add floor / ceiling verts
 		int ceilVertOfs = 0;
 
 		if (hasFloor) {
-			for (int i = 0; i < sector.LEVSector.Vertices.Count; ++i) {
-				Vector2 v2 = sector.LEVSector.Vertices[i];
-				sector.Vertices[i] = new Vector3(v2.x, sector.LEVSector.FloorAlt, v2.y);
+			for (int i = 0; i < sector.levSector.vertices.Count; ++i) {
+				Vector2 v2 = sector.levSector.vertices[i];
+				sector.vertices[i] = new Vector3(v2.x, sector.levSector.floorAlt, v2.y);
 			}
-			ceilVertOfs = sector.LEVSector.Vertices.Count;
+			ceilVertOfs = sector.levSector.vertices.Count;
 		}
 
 		if (hasCeil) {
-			for (int i = 0; i < sector.LEVSector.Vertices.Count; ++i) {
-				Vector2 v2 = sector.LEVSector.Vertices[i];
-				sector.Vertices[i + ceilVertOfs] = new Vector3(v2.x, sector.LEVSector.CeilAlt, v2.y);
+			for (int i = 0; i < sector.levSector.vertices.Count; ++i) {
+				Vector2 v2 = sector.levSector.vertices[i];
+				sector.vertices[i + ceilVertOfs] = new Vector3(v2.x, sector.levSector.ceilAlt, v2.y);
 			}
 		}
 
 		if (hasFloor || hasCeil) {
 			List<int> floorTris = new List<int>();
 			List<int> ceilTris = new List<int>();
-			GenerateSectorFloorsAndCeilings(sector.LEVSector, sectorIndex, hasFloor, hasCeil, ref floorTris, ref ceilTris, sector.UVs, sector.Materials, debugDraw);
+			GenerateSectorFloorsAndCeilings(sector.levSector, sectorIndex, hasFloor, hasCeil, ref floorTris, ref ceilTris, sector.uvs, sector.materials, debugDraw);
 
 			if (hasFloor) {
 				meshTris.Add(floorTris);
@@ -216,7 +227,7 @@ public class World : System.IDisposable {
 
 		// assume every wall has an adjoin with top/bottom quads
 		for (int i = 0; i < numWalls; ++i) {
-			int baseIndex = (sector.LEVSector.Vertices.Count*numFloors) + i * 12;
+			int baseIndex = (sector.levSector.vertices.Count*numFloors) + i * 12;
 			List<int> top = new List<int>();
 			GenerateQuadTris(baseIndex, top);
 			List<int> mid = new List<int>();
@@ -231,48 +242,48 @@ public class World : System.IDisposable {
 			MakeSectorWall(sector, i, numFloors + (i*3), baseIndex);
 		}
 
-		sector.Mesh.vertices = sector.Vertices;
-		sector.Mesh.uv = sector.UVs;
-		sector.Mesh.subMeshCount = meshTris.Count;
-		sector.MeshRenderer.materials = sector.Materials;
+		sector.mesh.vertices = sector.vertices;
+		sector.mesh.uv = sector.uvs;
+		sector.mesh.subMeshCount = meshTris.Count;
+		sector.meshRenderer.materials = sector.materials;
 
 		for (int i = 0; i < meshTris.Count; ++i) {
 			var m = meshTris[i];
-			sector.Mesh.SetTriangles(m.ToArray(), i);
+			sector.mesh.SetTriangles(m.ToArray(), i);
 		}
 	}
 
 	private void MakeSectorWall(Sector sector, int wallIndex, int materialIndex, int baseVertexOfs) {
 		
-		LEV.Wall levWall = sector.LEVSector.Walls[wallIndex];
+		LEV.Wall levWall = sector.levSector.walls[wallIndex];
 		Wall wall = new Wall();
 		wall.LEVWall = levWall;
 
-		if (levWall.TexTop.Texture != -1) {
-			wall.Top = _textures[levWall.TexTop.Texture];
+		if (levWall.texTop.texture != -1) {
+			wall.Top = _textures[levWall.texTop.texture];
 		}
 
-		if (levWall.TexMid.Texture != -1) {
-			if ((levWall.Adjoin == -1) || ((levWall.Flags0 & LEV.Wall.EFlags0.AlwaysDrawMid) != LEV.Wall.EFlags0.None)) {
-				wall.Mid = _textures[levWall.TexMid.Texture];
+		if (levWall.texMid.texture != -1) {
+			if ((levWall.adjoin == -1) || ((levWall.flags0 & LEV.Wall.EFlags0.AlwaysDrawMid) != 0)) {
+				wall.Mid = _textures[levWall.texMid.texture];
 			}
 		}
 
-		if (levWall.TexBottom.Texture != -1) {
-			wall.Bottom = _textures[levWall.TexBottom.Texture];
+		if (levWall.texBottom.texture != -1) {
+			wall.Bottom = _textures[levWall.texBottom.texture];
 		}
 
 		wall.Top = wall.Top ?? _defaultTexture;
 		wall.Mid = wall.Mid ?? _defaultTexture;
 		wall.Bottom = wall.Bottom ?? _defaultTexture;
 
-		sector.Walls.Add(wall);
+		sector.walls.Add(wall);
 
 		Material matTop = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 		Material matMid = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 		Material matBottom = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 
-		float lightLevel = sector.LEVSector.Ambient + levWall.Light;
+		float lightLevel = sector.levSector.ambient + levWall.light;
 
 		if (_game.EmulateCMPShading) {
 			matTop.SetFloat("_LightLevel", lightLevel);
@@ -284,85 +295,85 @@ public class World : System.IDisposable {
 		matMid.mainTexture = wall.Mid.Frames[0].Texture;
 		matBottom.mainTexture = wall.Bottom.Frames[0].Texture;
 
-		sector.Materials[materialIndex + 0] = matTop;
-		sector.Materials[materialIndex + 1] = matMid;
-		sector.Materials[materialIndex + 2] = matBottom;
+		sector.materials[materialIndex + 0] = matTop;
+		sector.materials[materialIndex + 1] = matMid;
+		sector.materials[materialIndex + 2] = matBottom;
 
 		UpdateSectorWall(sector, wallIndex, baseVertexOfs);
 	}
 
 	private void UpdateSectorWall(Sector sector, int wallIndex, int baseVertexOfs) {
 		LEV.Sector adjoin = null;
-		LEV.Wall LEVWall = sector.LEVSector.Walls[wallIndex];
-		Wall wall = sector.Walls[wallIndex];
+		LEV.Wall levWall = sector.levSector.walls[wallIndex];
+		Wall wall = sector.walls[wallIndex];
 
-		if (LEVWall.Adjoin != -1) {
-			adjoin = _lev.Sectors[LEVWall.Adjoin];
+		if (levWall.adjoin != -1) {
+			adjoin = _lev.Sectors[levWall.adjoin];
 		}
 
-		float secondAlt = sector.LEVSector.CeilAlt;
+		float secondAlt = sector.levSector.ceilAlt;
 
 		// top
 
-		if ((adjoin != null) && ((sector.LEVSector.CeilAlt > adjoin.CeilAlt) && ((adjoin.Flags0 & LEV.Sector.EFlags0.SkyCeil) == LEV.Sector.EFlags0.None))) {
-			secondAlt = adjoin.CeilAlt;
+		if ((adjoin != null) && ((sector.levSector.ceilAlt > adjoin.ceilAlt) && ((adjoin.flags0 & LEV.Sector.EFlags0.SkyCeil) == 0))) {
+			secondAlt = adjoin.ceilAlt;
 		}
 
 		UpdateWallQuad(
 			sector,
 			wall.Top,
 			baseVertexOfs,
-			sector.LEVSector.Vertices[LEVWall.V0],
-			sector.LEVSector.Vertices[LEVWall.V1],
-			sector.LEVSector.CeilAlt,
+			sector.levSector.vertices[levWall.v0],
+			sector.levSector.vertices[levWall.v1],
+			sector.levSector.ceilAlt,
 			secondAlt,
 			false,
-			LEVWall.TexTop.ShiftX*8,
-			-LEVWall.TexTop.ShiftY*8,
+			levWall.texTop.shiftX*8,
+			-levWall.texTop.shiftY*8,
 			false
 		);
 
 		// mid
 
-		if ((adjoin == null) || ((LEVWall.Flags0 & LEV.Wall.EFlags0.AlwaysDrawMid) != LEV.Wall.EFlags0.None)) {
-			secondAlt = sector.LEVSector.FloorAlt;
-		} else if ((adjoin.Flags0 & LEV.Sector.EFlags0.SkyFloor) == LEV.Sector.EFlags0.None) {
-			secondAlt = sector.LEVSector.CeilAlt;
+		if ((adjoin == null) || ((levWall.flags0 & LEV.Wall.EFlags0.AlwaysDrawMid) != 0)) {
+			secondAlt = sector.levSector.floorAlt;
+		} else if ((adjoin.flags0 & LEV.Sector.EFlags0.SkyFloor) == 0) {
+			secondAlt = sector.levSector.ceilAlt;
 		}
 
 		UpdateWallQuad(
 			sector,
 			wall.Mid,
 			baseVertexOfs + 4,
-			sector.LEVSector.Vertices[LEVWall.V0],
-			sector.LEVSector.Vertices[LEVWall.V1],
-			sector.LEVSector.CeilAlt,
+			sector.levSector.vertices[levWall.v0],
+			sector.levSector.vertices[levWall.v1],
+			sector.levSector.ceilAlt,
 			secondAlt,
-			!((LEVWall.Flags0 & LEV.Wall.EFlags0.TexAnchor) != LEV.Wall.EFlags0.None),
-			LEVWall.TexMid.ShiftX*8,
-			-LEVWall.TexMid.ShiftY*8,
-			(LEVWall.Flags0 & LEV.Wall.EFlags0.FlipHorz) != LEV.Wall.EFlags0.None
+			!((levWall.flags0 & LEV.Wall.EFlags0.TexAnchor) != 0),
+			levWall.texMid.shiftX*8,
+			-levWall.texMid.shiftY*8,
+			(levWall.flags0 & LEV.Wall.EFlags0.FlipHorz) != 0
 		);
 
 		// bottom
 
-		secondAlt = sector.LEVSector.FloorAlt;
+		secondAlt = sector.levSector.floorAlt;
 
-		if ((adjoin != null) && (sector.LEVSector.FloorAlt < adjoin.FloorAlt)) {
-			secondAlt = adjoin.FloorAlt;
+		if ((adjoin != null) && (sector.levSector.floorAlt < adjoin.floorAlt)) {
+			secondAlt = adjoin.floorAlt;
 		}
 
 		UpdateWallQuad(
 			sector,
 			wall.Bottom,
-			baseVertexOfs + 8,
-			sector.LEVSector.Vertices[LEVWall.V0],
-			sector.LEVSector.Vertices[LEVWall.V1],
+			baseVertexOfs + 8, 
+			sector.levSector.vertices[levWall.v0],
+			sector.levSector.vertices[levWall.v1],
 			secondAlt,
-			sector.LEVSector.FloorAlt,
+			sector.levSector.floorAlt,
 			true,
-			LEVWall.TexBottom.ShiftX*8,
-		    -LEVWall.TexBottom.ShiftY*8,
+			levWall.texBottom.shiftX*8,
+		    -levWall.texBottom.shiftY*8,
 			false
 		);
 	}
@@ -382,10 +393,10 @@ public class World : System.IDisposable {
 		Vector3 v2 = new Vector3(sv1.x, bottom, sv1.y);
 		Vector3 v3 = new Vector3(sv0.x, bottom, sv0.y);
 
-		sector.Vertices[vertexOfs + 0] = v0;
-		sector.Vertices[vertexOfs + 1] = v1;
-		sector.Vertices[vertexOfs + 2] = v2;
-		sector.Vertices[vertexOfs + 3] = v3;
+		sector.vertices[vertexOfs + 0] = v0;
+		sector.vertices[vertexOfs + 1] = v1;
+		sector.vertices[vertexOfs + 2] = v2;
+		sector.vertices[vertexOfs + 3] = v3;
 
 		float length = ((sv1 != sv0) ? (sv1 - sv0).magnitude : 0f) * 8f;
 		float height = Mathf.Abs(bottom-top)*8;
@@ -414,10 +425,10 @@ public class World : System.IDisposable {
 		Vector2 uv2 = new Vector2(uvRight, 1f-uvBottom);
 		Vector2 uv3 = new Vector2(uvLeft, 1f-uvBottom);
 
-		sector.UVs[vertexOfs + 0] = uv0;
-		sector.UVs[vertexOfs + 1] = uv1;
-		sector.UVs[vertexOfs + 2] = uv2;
-		sector.UVs[vertexOfs + 3] = uv3;
+		sector.uvs[vertexOfs + 0] = uv0;
+		sector.uvs[vertexOfs + 1] = uv1;
+		sector.uvs[vertexOfs + 2] = uv2;
+		sector.uvs[vertexOfs + 3] = uv3;
 	}
 
 	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, int sectorIndex, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats, bool debugDraw) {
@@ -428,14 +439,14 @@ public class World : System.IDisposable {
 
 		if (hasFloor) {
 			outFloorTris = tess;
-			BM bm = _textures[sector.FloorTex] ?? _defaultTexture;
+			BM bm = _textures[sector.floorTex] ?? _defaultTexture;
 			outMats[0] = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 			outMats[0].mainTexture = bm.Frames[0].Texture;
 			if (_game.EmulateCMPShading) {
-				outMats[0].SetFloat("_LightLevel", sector.Ambient);
+				outMats[0].SetFloat("_LightLevel", sector.ambient);
 			}
-			UpdateFloorUVs(sector, bm, sector.FloorShiftX, sector.FloorShiftZ, vertOfs, outUVs);
-			vertOfs += sector.Vertices.Count;
+			UpdateFloorUVs(sector, bm, sector.floorShiftX, sector.floorShiftZ, vertOfs, outUVs);
+			vertOfs += sector.vertices.Count;
 			++matOfs;
 		}
 
@@ -447,13 +458,13 @@ public class World : System.IDisposable {
 				outCeilTris.Add(tess[i] + vertOfs);
 			}
 
-			BM bm = _textures[sector.CeilTex] ?? _defaultTexture;
+			BM bm = _textures[sector.ceilTex] ?? _defaultTexture;
 			outMats[matOfs] = new Material(_game.EmulateCMPShading ? _game.SolidCMP : _game.Solid);
 			outMats[matOfs].mainTexture = bm.Frames[0].Texture;
 			if (_game.EmulateCMPShading) {
-				outMats[matOfs].SetFloat("_LightLevel", sector.Ambient);
+				outMats[matOfs].SetFloat("_LightLevel", sector.ambient);
 			}
-			UpdateFloorUVs(sector, bm, sector.CeilShiftX, sector.CeilShiftZ, vertOfs, outUVs);
+			UpdateFloorUVs(sector, bm, sector.ceilShiftX, sector.ceilShiftZ, vertOfs, outUVs);
 		}
 	}
 
@@ -464,8 +475,8 @@ public class World : System.IDisposable {
 		float rw = frame.WRecip;
 		float rh = frame.HRecip;
 
-		for (int i = 0; i < sector.Vertices.Count; ++i) {
-			Vector2 v = sector.Vertices[i];
+		for (int i = 0; i < sector.vertices.Count; ++i) {
+			Vector2 v = sector.vertices[i];
 			float s = -(v.x-shiftX)*8f;
 			float t = -(v.y-shiftY)*8f;
 
@@ -477,6 +488,10 @@ public class World : System.IDisposable {
 		foreach (var bm in _textures) {
 			bm.Dispose();
 		}
+		foreach (var s in _sectors) {
+			s.Destroy();
+		}
+
 		_textures = null;
 
 		_lev.Dispose();

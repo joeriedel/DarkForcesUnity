@@ -28,6 +28,12 @@ using System.Collections.Generic;
 
 public abstract class Asset : System.IDisposable {
 
+	Type _type;
+	int _refCount;
+	string _name;
+	bool _bIsCached;
+	static Dictionary<string, Asset> cachedAssets = new Dictionary<string, Asset>();
+
 	public enum Type {
 		BLOB,
 		BM,
@@ -51,7 +57,7 @@ public abstract class Asset : System.IDisposable {
 	}
 
 	public void Dispose() {
-		RuntimeCheck.Assert(_refCount >= 0, "RefCount error! (" + Name + ")");
+		RuntimeCheck.Assert(_refCount >= 0, "RefCount error! (" + name + ")");
 
 		if (--_refCount == 0) {
 			if (!_bIsCached) {
@@ -74,18 +80,14 @@ public abstract class Asset : System.IDisposable {
 
 	protected virtual void OnDispose() { }
 
-	public void Reference() {
+	public void AddRef() {
 		++_refCount;
 	}
 	
-	public string Name { get { return _name; } }
-	public Type TypeOf { get { return _type; } } 
-	public bool Cached { get { return _bIsCached; } }
-	public int RefCount { get { return _refCount; } }
-
-	public static void StaticInit(Game game) {
-		s_game = game;
-	}
+	public string name { get { return _name; } }
+	public Type typeOf { get { return _type; } } 
+	public bool cached { get { return _bIsCached; } }
+	public int refCount { get { return _refCount; } }
 
 	public static Type TypeForName(string name) {
 		int period = name.LastIndexOf('.');
@@ -133,10 +135,10 @@ public abstract class Asset : System.IDisposable {
 	public static T Load<T>(string name, CacheMode mode, object createArgs) where T : Asset {
 		
 		Asset asset = null;
-		if ((mode == CacheMode.Cached) && s_assets.TryGetValue(name, out asset)) {
-			asset.Reference();
+		if ((mode == CacheMode.Cached) && cachedAssets.TryGetValue(name, out asset)) {
+			asset.AddRef();
 		} else {
-			byte[] data = s_game.Files.Load(name);
+			byte[] data = Game.instance.files.Load(name);
 			if (data != null) {
 				asset = New(name, data, TypeForName(name), createArgs);
 			}
@@ -144,7 +146,7 @@ public abstract class Asset : System.IDisposable {
 			if (asset != null) {
 				asset._bIsCached = (mode == CacheMode.Cached);
 				if (asset._bIsCached) {
-					s_assets[name] = asset;
+					cachedAssets[name] = asset;
 				}
 			} else {
 				throw new System.IO.FileNotFoundException("'" + name + "' was not found in any open GOB file.");
@@ -163,7 +165,7 @@ public abstract class Asset : System.IDisposable {
 		byte[] data = file.Load();
 
 		if (data != null) {
-			return New(file.Name, data, TypeForName(file.Name), createArgs);
+			return New(file.name, data, TypeForName(file.name), createArgs);
 		}
 
 		return null;
@@ -206,8 +208,8 @@ public abstract class Asset : System.IDisposable {
 	}
 
 	public static void ClearCache() {
-		Dictionary<string, Asset> assets = s_assets;
-		s_assets = null;
+		Dictionary<string, Asset> assets = cachedAssets;
+		cachedAssets = null;
 
 		if (assets != null) {
 			foreach (Asset asset in assets.Values) {
@@ -215,39 +217,32 @@ public abstract class Asset : System.IDisposable {
 			}
 		}
 
-		s_assets = new Dictionary<string, Asset>();
+		cachedAssets = new Dictionary<string, Asset>();
 	}
 
 	public static void PurgeCache() {
 		List<string> purgeList = new List<string>();
 
-		foreach (Asset asset in s_assets.Values) {
-			if (asset._bIsCached && (asset.RefCount == 0)) {
+		foreach (Asset asset in cachedAssets.Values) {
+			if (asset._bIsCached && (asset.refCount == 0)) {
 				asset._bIsCached = false;
-				purgeList.Add(asset.Name);
+				purgeList.Add(asset.name);
 				asset.Dispose(true);
 			}
 		}
 
 		foreach (string name in purgeList) {
-			s_assets.Remove(name);
+			cachedAssets.Remove(name);
 		}
 	}
 
 	private static void Add(Asset asset) {
-		s_assets.Add(asset.Name, asset);
+		cachedAssets.Add(asset.name, asset);
 	}
 
 	private static void Remove(Asset asset) {
-		if (s_assets != null) {
-			s_assets.Remove(asset.Name);
+		if (cachedAssets != null) {
+			cachedAssets.Remove(asset.name);
 		}
 	}
-
-	private Type _type;
-	private int _refCount;
-	private string _name;
-	private bool _bIsCached;
-	private static Game s_game;
-	private static Dictionary<string, Asset> s_assets = new Dictionary<string, Asset>();
 }

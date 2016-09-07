@@ -34,12 +34,12 @@ public sealed class CMP : Asset {
 			throw new InvalidDataException("Dark forces colormap files are 8320 bytes long!");
 		}
 
-		_colorMap = data;
+		colorMap = data;
 
-		_texture = new Texture2D(256, 33, TextureFormat.Alpha8, false, false);
-		_texture.anisoLevel = 0;
-		_texture.filterMode = FilterMode.Point;
-		_texture.wrapMode = TextureWrapMode.Clamp;
+		texture = new Texture2D(256, 33, TextureFormat.Alpha8, false, false);
+		texture.anisoLevel = 0;
+		texture.filterMode = FilterMode.Point;
+		texture.wrapMode = TextureWrapMode.Clamp;
 
 		Color32[] colors = new Color32[256*33];
 
@@ -48,14 +48,14 @@ public sealed class CMP : Asset {
 			ofs = 256*i;
 
 			for (int j = 0; j < 256; ++j) {
-				byte c = _colorMap[ofs+j];
+				byte c = colorMap[ofs+j];
 				colors[ofs+j] = new Color32(c, c, c, c);
 			}
 		}
 
 		ofs = 256*32;
 		for (int i = 0; i < 128; ++i) {
-			byte c = _colorMap[ofs+i];
+			byte c = colorMap[ofs+i];
 			colors[ofs+i] = new Color32(c, c, c, c);
 		}
 		ofs = 256*32+128;
@@ -63,22 +63,27 @@ public sealed class CMP : Asset {
 			colors[ofs+i] = new Color32(0, 0, 0, 0);
 		}
 
-		_texture.SetPixels32(colors);
-		_texture.Apply();
+		texture.SetPixels32(colors);
+		texture.Apply();
 	}
 
 	protected override void OnDispose() {
 		base.OnDispose();
 		if (Application.isPlaying) {
-			Object.Destroy(_texture);
+			Object.Destroy(texture);
 		} else {
-			Object.DestroyImmediate(_texture);
+			Object.DestroyImmediate(texture);
 		}
 	}
 
-	public byte[] ColorMap { get { return _colorMap; } }
-	public Texture Texture { get { return _texture; } }
+	public byte[] colorMap {
+		get;
+		private set;
+	}
 
-	private byte[] _colorMap;
-	private static Texture2D _texture;
+	public Texture2D texture {
+		get;
+		private set;
+	}
+	
 }

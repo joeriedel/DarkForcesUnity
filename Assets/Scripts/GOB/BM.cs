@@ -32,11 +32,11 @@ public sealed class BM : Asset {
 
 	public class CreateArgs {
 		public bool bMipmap = true;
-		public int AnisoLevel = 9;
-		public FilterMode FilterMode = FilterMode.Trilinear;
-		public TextureWrapMode WrapMode = TextureWrapMode.Repeat;
-		public TextureFormat TextureFormat = TextureFormat.ARGB32;
-		public PAL Pal;
+		public int anisoLevel = 9;
+		public FilterMode filterMode = FilterMode.Trilinear;
+		public TextureWrapMode wrapMode = TextureWrapMode.Repeat;
+		public TextureFormat textureFormat = TextureFormat.ARGB32;
+		public PAL pal;
 	}
 
 	public class Frame : System.IDisposable {
@@ -100,14 +100,14 @@ public sealed class BM : Asset {
 		Header header = ReadHeader(stream, EHeaderType.FileHeader);
 		DebugCheck.Assert(stream.Position == 32);
 
-		if ((header.W == 1) && (header.H != 1)) {
+		if ((header.h == 1) && (header.h != 1)) {
 			// multiple bitmaps in this file.
 			_fps = stream.ReadByte();
 			stream.Skip(1);
 
 			long baseOfs = stream.Position;
 
-			int[] offsets = new int[header.IY];
+			int[] offsets = new int[header.iy];
 			for (int i = 0; i < offsets.Length; ++i) {
 				offsets[i] = stream.ReadLittleInt32();
 			}
@@ -121,10 +121,10 @@ public sealed class BM : Asset {
 		} else {
 			int[] columnOffsets = null;
 
-			if (header.Compressed != 0) {
+			if (header.compressed != 0) {
 				// read column offsets.
-				stream.SeekSet(header.DataSize);
-				columnOffsets = new int[header.W];
+				stream.SeekSet(header.dataSize);
+				columnOffsets = new int[header.w];
 
 				for (int i = 0; i < columnOffsets.Length; ++i) {
 					columnOffsets[i] = stream.ReadLittleInt32() + 32;
@@ -139,27 +139,27 @@ public sealed class BM : Asset {
 	public static Frame ReadColumns(ByteStream stream, Header header, int[] columnOffsets, CreateArgs createArgs) {
 
 		try {
-			Texture2D texture = new Texture2D(header.W, header.H, createArgs.TextureFormat, createArgs.bMipmap, false);
+			Texture2D texture = new Texture2D(header.w, header.h, createArgs.textureFormat, createArgs.bMipmap, false);
 
-			texture.anisoLevel = createArgs.AnisoLevel;
-			texture.filterMode = createArgs.FilterMode;
-			texture.wrapMode = createArgs.WrapMode;
+			texture.anisoLevel = createArgs.anisoLevel;
+			texture.filterMode = createArgs.filterMode;
+			texture.wrapMode = createArgs.wrapMode;
 
-			Color32[] pixels = new Color32[header.W*header.H];
-			byte[] column = new byte[header.H];
-			bool bIsTransparent = (header.Transparent & 0x8) != 0;
+			Color32[] pixels = new Color32[header.w*header.h];
+			byte[] column = new byte[header.h];
+			bool bIsTransparent = (header.transparent & 0x8) != 0;
 
-			for (int x = 0; x < header.W; ++x) {
+			for (int x = 0; x < header.w; ++x) {
 				if (columnOffsets != null) {
 					stream.SeekSet(columnOffsets[x]);
 				}
 
-				DecodeColumn(stream, column, header.Compressed);
+				DecodeColumn(stream, column, header.compressed);
 
-				if (createArgs.TextureFormat == TextureFormat.Alpha8) {
+				if (createArgs.textureFormat == TextureFormat.Alpha8) {
 					int pixelOfs = x;
 
-					for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
+					for (int y = 0; y < header.h; ++y, pixelOfs += header.w) {
 						byte color = column[y];
 						pixels[pixelOfs] = new Color32(color, color, color, color);
 					}
@@ -167,13 +167,13 @@ public sealed class BM : Asset {
 				} else {
 					int pixelOfs = x;
 
-					for (int y = 0; y < header.H; ++y, pixelOfs += header.W) {
+					for (int y = 0; y < header.h; ++y, pixelOfs += header.w) {
 						byte color = column[y];
 
 						if (bIsTransparent && (color == 0)) {
-							pixels[pixelOfs] = PAL.Transparent;
+							pixels[pixelOfs] = PAL.transparent;
 						} else {
-							pixels[pixelOfs] = createArgs.Pal.Colors[color];
+							pixels[pixelOfs] = createArgs.pal.colors[color];
 						}
 					}
 				}
@@ -192,20 +192,20 @@ public sealed class BM : Asset {
 		Header header = new Header();
 
 		if (headerType == EHeaderType.FileHeader) {
-			header.W = stream.ReadLittleShort16();
-			header.H = stream.ReadLittleShort16();
+			header.w = stream.ReadLittleShort16();
+			header.h = stream.ReadLittleShort16();
 			stream.Skip(2);
-			header.IY = stream.ReadLittleShort16();
-			header.Transparent = stream.ReadByte();
+			header.iy = stream.ReadLittleShort16();
+			header.transparent = stream.ReadByte();
 			stream.Skip(1);
-			header.Compressed = stream.ReadLittleShort16();
-			header.DataSize = stream.ReadLittleInt32();
+			header.compressed = stream.ReadLittleShort16();
+			header.dataSize = stream.ReadLittleInt32();
 			stream.Skip(12);
 		} else {
-			header.W = stream.ReadLittleShort16();
-			header.H = stream.ReadLittleShort16();
+			header.w = stream.ReadLittleShort16();
+			header.h = stream.ReadLittleShort16();
 			stream.Skip(20);
-			header.Transparent = stream.ReadByte();
+			header.transparent = stream.ReadByte();
 			stream.Skip(3);
 		}
 
@@ -258,12 +258,12 @@ public sealed class BM : Asset {
 	}
 
 	public struct Header {
-		public int W;
-		public int H;
-		public int IY;
-		public int Transparent;
-		public int Compressed;
-		public int DataSize;
+		public int w;
+		public int h;
+		public int iy;
+		public int transparent;
+		public int compressed;
+		public int dataSize;
 	}
 
 	private List<Frame> _frames = new List<Frame>();

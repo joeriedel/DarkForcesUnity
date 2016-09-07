@@ -68,14 +68,14 @@ namespace EditorTools {
 			using (PAL pal = Asset.New("RAMSHED.PAL", _files.Load("RAMSHED.PAL"), Asset.Type.PAL, null) as PAL) {
 
 				BM.CreateArgs bmCreateArgs = new BM.CreateArgs();
-				bmCreateArgs.FilterMode = FilterMode.Point;
+				bmCreateArgs.filterMode = FilterMode.Point;
 				bmCreateArgs.bMipmap = false;
-				bmCreateArgs.AnisoLevel = 0;
-				bmCreateArgs.Pal = pal;
+				bmCreateArgs.anisoLevel = 0;
+				bmCreateArgs.pal = pal;
 
 				foreach (var gob in _files.GOBs) {
 					foreach (var file in gob.Files) {
-						switch (Asset.TypeForName(file.Name)) {
+						switch (Asset.TypeForName(file.name)) {
 							case Asset.Type.BM:
 								_views.Add(new GOBBMViewer(Asset.Load(file, bmCreateArgs) as BM));
 							break;
@@ -157,7 +157,7 @@ namespace EditorTools {
 				iframe = 0;
 			}
 
-			GUILayout.Label(_bm.Name + " - " + _bm.Frames[0].Texture.width + "x" + _bm.Frames[0].Texture.height, EditorStyles.boldLabel);
+			GUILayout.Label(_bm.name + " - " + _bm.Frames[0].Texture.width + "x" + _bm.Frames[0].Texture.height, EditorStyles.boldLabel);
 
 			scale = GUILayout.HorizontalSlider(scale, 0.1f, 5f, GUILayout.Width(200));
 			float w = _bm.Frames[iframe].Texture.width * scale;
@@ -179,7 +179,7 @@ namespace EditorTools {
 		public GOBFMEViewer(FME fme) : base(fme) {
 			_fme = fme;
 
-			float edge = Mathf.Max(fme.Frame.Texture.width, fme.Frame.Texture.height);
+			float edge = Mathf.Max(fme.frame.Texture.width, fme.frame.Texture.height);
 			scale = Mathf.Clamp(64f / edge, 0.1f, 5f);
 		}
 
@@ -188,14 +188,14 @@ namespace EditorTools {
 		}
 
 		public override void OnGUI() {
-			GUILayout.Label(_fme.Name + " - " + _fme.Frame.Texture.width + "x" + _fme.Frame.Texture.height, EditorStyles.boldLabel);
+			GUILayout.Label(_fme.name + " - " + _fme.frame.Texture.width + "x" + _fme.frame.Texture.height, EditorStyles.boldLabel);
 
 			scale = GUILayout.HorizontalSlider(scale, 0.1f, 5f, GUILayout.Width(200));
-			float w = _fme.Frame.Texture.width * scale;
-			float h = _fme.Frame.Texture.height * scale;
+			float w = _fme.frame.Texture.width * scale;
+			float h = _fme.frame.Texture.height * scale;
 
 			var r = GUILayoutUtility.GetRect(w, h, GUILayout.Width(w), GUILayout.Height(h));
-			GUI.DrawTexture(r, _fme.Frame.Texture);
+			GUI.DrawTexture(r, _fme.frame.Texture);
 
 		}
 

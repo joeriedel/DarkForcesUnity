@@ -44,12 +44,14 @@ public sealed class Tokenizer {
 		_stream = stream;
 	}
   
-	public int Line {
-		get { return _lineNum; }
+	public int line {
+		get;
+		private set;
 	}
   
-	public int CharPos {
-		get { return _charNum; }
+	public int charPos {
+		get;
+		private set;
 	}
   
 	public void UngetToken() {
@@ -171,7 +173,7 @@ public sealed class Tokenizer {
 						return null;
 					}
 
-					++_charNum;
+					++charPos;
 
 					if (!char.IsWhiteSpace(c.Value)) {
 						break;
@@ -181,28 +183,28 @@ public sealed class Tokenizer {
 						if (PeekNextChar() == LF) {
 							_stream.Skip(1);
 						}
-						++_lineNum;
-						_charNum = 0;
+						++line;
+						charPos = 0;
 					} else if (c == LF) {
-						++_lineNum;
-						_charNum = 0;
+						++line;
+						charPos = 0;
 					}
 				}
 			} else {
 				c = SafeReadChar();
 				if (c != null) {
-					++_charNum;
+					++charPos;
 
 					if (c == CR) {
-						++_lineNum;
-						_charNum = 0;
+						++line;
+						charPos = 0;
 
 						if (PeekNextChar() == LF) {
 							_stream.Skip(1);
 						}
 					} else if (c == LF) {
-						++_lineNum;
-						_charNum = 0;
+						++line;
+						charPos = 0;
 					}
 				}
 			}
@@ -212,16 +214,16 @@ public sealed class Tokenizer {
 					// single line comment, skip line
 					while ((c = SafeReadChar()) != null) {
 						if (c == CR) {
-							++_lineNum;
-							_charNum = 0;
+							++line;
+							charPos = 0;
 
 							if (PeekNextChar() == LF) {
 								_stream.Skip(1);
 							}
 							break;
 						} else if (c == LF) {
-							++_lineNum;
-							_charNum = 0;
+							++line;
+							charPos = 0;
 							break;
 						}
 					}
@@ -248,11 +250,11 @@ public sealed class Tokenizer {
 								if (PeekNextChar() == LF) {
 									_stream.Skip(1);
 								}
-								++_lineNum;
-								_charNum = 0;
+								++line;
+								charPos = 0;
 							} else if (c == LF) {
-								++_lineNum;
-								_charNum = 0;
+								++line;
+								charPos = 0;
 							}
 						}
 
@@ -287,18 +289,16 @@ public sealed class Tokenizer {
 	}
 
 	public void ThrowError(string msg) {
-		RuntimeCheck.Assert(false, string.Format("Parse error '{0}' file: '{1}', line '{2}', char '{3}'", msg, _name, _lineNum, _charNum));
+		RuntimeCheck.Assert(false, string.Format("Parse error '{0}' file: '{1}', line '{2}', char '{3}'", msg, _name, line, charPos));
 	}
 
 	const char CR = '\r';
 	const char LF = '\n';
 	
-	private ECommentStyle _commentStyle;
-	private string _token;
-	private string _unToken;
-	private ByteStream _stream;
-	private bool _eof = false;
-	private int _lineNum = 1;
-	private int _charNum = 1;
-	private readonly string _name;
+	ECommentStyle _commentStyle;
+	string _token;
+	string _unToken;
+	ByteStream _stream;
+	bool _eof = false;
+	readonly string _name;
 }

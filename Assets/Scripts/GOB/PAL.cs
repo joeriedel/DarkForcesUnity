@@ -33,45 +33,52 @@ public sealed class PAL : Asset {
 			throw new InvalidDataException("Dark forces palette files are 768 bytes long!");
 		}
 
-		_colors = new Color32[256];
+		colors = new Color32[256];
 
 		int palOfs = 0;
-		for (int i = 0; i < _colors.Length; ++i, palOfs += 3) {
-			_colors[i] = new Color32(ExpandPalByte(data[palOfs]), ExpandPalByte(data[palOfs+1]), ExpandPalByte(data[palOfs+2]), 255);
+		for (int i = 0; i < colors.Length; ++i, palOfs += 3) {
+			colors[i] = new Color32(ExpandPalByte(data[palOfs]), ExpandPalByte(data[palOfs+1]), ExpandPalByte(data[palOfs+2]), 255);
 		}
 
-		_texture = new Texture2D(256, 1, TextureFormat.ARGB32, false, false);
-		_texture.anisoLevel = 0;
-		_texture.filterMode = FilterMode.Point;
-		_texture.wrapMode = TextureWrapMode.Clamp;
+		texture = new Texture2D(256, 1, TextureFormat.ARGB32, false, false);
+		texture.anisoLevel = 0;
+		texture.filterMode = FilterMode.Point;
+		texture.wrapMode = TextureWrapMode.Clamp;
 
-		_texture.SetPixels32(_colors);
-		_texture.Apply();
+		texture.SetPixels32(colors);
+		texture.Apply();
 	}
 
 	protected override void OnDispose() {
 		base.OnDispose();
 		if (Application.isPlaying) {
-			Object.Destroy(_texture);
+			Object.Destroy(texture);
 		} else {
-			Object.DestroyImmediate(_texture);
+			Object.DestroyImmediate(texture);
 		}
 	}
 
 	static PAL() {
-		_transparentColor = new Color32(255, 0, 255, 255);
+		transparent = new Color32(255, 0, 255, 255);
 	}
 
 	static byte ExpandPalByte(byte c) {
 		return (byte)(c/63f*255f);
 	}
 
-	public static Color32 Transparent { get { return _transparentColor; } }
+	public static Color32 transparent {
+		get;
+		private set;
+	}
 
-	public Color32[] Colors { get { return _colors; } }
-	public Texture Texture { get { return _texture; } }
+	public Color32[] colors {
+		get;
+		private set;
+	}
 
-	private Color32[] _colors;
-	private static Color32 _transparentColor;
-	private static Texture2D _texture;
+	public Texture2D texture {
+		get;
+		private set;
+	}
+	
 }
