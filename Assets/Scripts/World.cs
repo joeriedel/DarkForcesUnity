@@ -108,7 +108,7 @@ public class World : System.IDisposable {
 		GenerateSectors();
 	}
 
-	private void GenerateSectors() {
+	void GenerateSectors() {
 		for (int i = 0; i < _lev.Sectors.Count; ++i) {
 			GenerateSector(i);
 		}
@@ -118,7 +118,7 @@ public class World : System.IDisposable {
 		//GenerateSector(192, true);
 	}
 
-	private bool CheckSector(LEV.Sector sector) {
+	bool CheckSector(LEV.Sector sector) {
 		// all vertices in sector should be shared by at least 2 walls.
 		List<int> count = new List<int>(sector.vertices.Count);
 		for (int i = 0; i < sector.vertices.Count; ++i) {
@@ -139,7 +139,7 @@ public class World : System.IDisposable {
 		return true;
 	}
 
-	private void GenerateSector(int sectorIndex, bool debugDraw = false) {
+	void GenerateSector(int sectorIndex, bool debugDraw = false) {
 		//Debug.Log("Generating sector " + sectorIndex);
 
 		Sector sector = new Sector();
@@ -253,7 +253,7 @@ public class World : System.IDisposable {
 		}
 	}
 
-	private void MakeSectorWall(Sector sector, int wallIndex, int materialIndex, int baseVertexOfs) {
+	void MakeSectorWall(Sector sector, int wallIndex, int materialIndex, int baseVertexOfs) {
 		
 		LEV.Wall levWall = sector.levSector.walls[wallIndex];
 		Wall wall = new Wall();
@@ -302,7 +302,7 @@ public class World : System.IDisposable {
 		UpdateSectorWall(sector, wallIndex, baseVertexOfs);
 	}
 
-	private void UpdateSectorWall(Sector sector, int wallIndex, int baseVertexOfs) {
+	void UpdateSectorWall(Sector sector, int wallIndex, int baseVertexOfs) {
 		LEV.Sector adjoin = null;
 		LEV.Wall levWall = sector.levSector.walls[wallIndex];
 		Wall wall = sector.walls[wallIndex];
@@ -378,7 +378,7 @@ public class World : System.IDisposable {
 		);
 	}
 
-	private void GenerateQuadTris(int baseIndex, List<int> outTris) {
+	void GenerateQuadTris(int baseIndex, List<int> outTris) {
 		outTris.Add(baseIndex + 0);
 		outTris.Add(baseIndex + 1);
 		outTris.Add(baseIndex + 3);
@@ -387,7 +387,7 @@ public class World : System.IDisposable {
 		outTris.Add(baseIndex + 1);
 	}
 
-	private void UpdateWallQuad(Sector sector, BM bm, int vertexOfs, Vector2 sv0, Vector2 sv1, float top, float bottom, bool pegBottom, float txShiftX, float txShiftY, bool flip) {
+	void UpdateWallQuad(Sector sector, BM bm, int vertexOfs, Vector2 sv0, Vector2 sv1, float top, float bottom, bool pegBottom, float txShiftX, float txShiftY, bool flip) {
 		Vector3 v0 = new Vector3(sv0.x, top, sv0.y);
 		Vector3 v1 = new Vector3(sv1.x, top, sv1.y);
 		Vector3 v2 = new Vector3(sv1.x, bottom, sv1.y);
@@ -431,7 +431,7 @@ public class World : System.IDisposable {
 		sector.uvs[vertexOfs + 3] = uv3;
 	}
 
-	private void GenerateSectorFloorsAndCeilings(LEV.Sector sector, int sectorIndex, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats, bool debugDraw) {
+	void GenerateSectorFloorsAndCeilings(LEV.Sector sector, int sectorIndex, bool hasFloor, bool hasCeil, ref List<int> outFloorTris, ref List<int> outCeilTris, Vector2[] outUVs, Material[] outMats, bool debugDraw) {
 		List<int> tess = SectorTess.TesselateSector(sector, sectorIndex, debugDraw);
 
 		int vertOfs = 0;
@@ -468,7 +468,7 @@ public class World : System.IDisposable {
 		}
 	}
 
-	private void UpdateFloorUVs(LEV.Sector sector, BM bm, float shiftX, float shiftY, int ofs, Vector2[] outUVs) {
+	void UpdateFloorUVs(LEV.Sector sector, BM bm, float shiftX, float shiftY, int ofs, Vector2[] outUVs) {
 		BM.Frame frame = bm.Frames[0];
 		float w = frame.Texture.width;
 		float h = frame.Texture.height;

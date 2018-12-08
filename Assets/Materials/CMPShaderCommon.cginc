@@ -1,4 +1,6 @@
-﻿/* CMPShaderCommon.cginc
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+/* CMPShaderCommon.cginc
  *
  * The MIT License (MIT)
  *
@@ -64,7 +66,7 @@ half4 CMPPixel(sampler2D main, sampler2D pal, sampler2D cmp, float lightLevel, f
 v2f CMPVert(appdata_t IN)
 {
 	v2f OUT;
-	OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+	OUT.vertex = UnityObjectToClipPos(IN.vertex);
 	OUT.texcoord = IN.texcoord;
 	OUT.clip = OUT.vertex;
 	return OUT;

@@ -51,12 +51,12 @@ public class Game : MonoBehaviour {
 
 	void Start() {
 		_world = new World(this);
-		_world.Load("SECBASE");
+		_world.Load("TALAY");
 
 		_iMuse = GetComponent<iMUSE>();
 
-		using (GMD stalk = Asset.LoadCached<GMD>("STALK-01.GMD")) {
-			using (GMD fight = Asset.LoadCached<GMD>("FIGHT-01.GMD")) {
+		using (GMD stalk = Asset.LoadCached<GMD>("STALK-02.GMD")) {
+			using (GMD fight = Asset.LoadCached<GMD>("FIGHT-02.GMD")) {
 				_iMuse.PlayLevelMusic(stalk, fight);
 			}
 		}
